@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 명단 — JP Landing admin</title>
+    <style>
+        :root {
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans JP", sans-serif;
+            background: #f3f5f8;
+            color: #1a1c1f;
+        }
+
+        .rv-bar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: #1a1c1f;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .rv-bar b {
+            font-size: 15px;
+        }
+
+        .rv-bar .sp {
+            flex: 1;
+        }
+
+        .rv-bar a,
+        .rv-bar button {
+            font: inherit;
+            cursor: pointer;
+            border: 0;
+            border-radius: 8px;
+            padding: 7px 14px;
+            background: #3a3d42;
+            color: #fff;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .rv-bar a.home {
+            background: #2f6df0;
+        }
+
+        .rv-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 18px 60px;
+        }
+
+        .rv-head {
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .rv-head h1 {
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .rv-stats {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 4px 0 18px;
+        }
+
+        .rv-stat {
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+        }
+
+        .rv-stat .n {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .rv-stat .l {
+            font-size: 12px;
+            color: #6b7077;
+        }
+
+        .rv-tools {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+            align-items: center;
+        }
+
+        .rv-tools input[type=search] {
+            padding: 10px 14px;
+            border: 1px solid #d8dadf;
+            border-radius: 10px;
+            font-size: 14px;
+            min-width: 220px;
+        }
+
+        .rv-tools select {
+            padding: 10px 12px;
+            border: 1px solid #d8dadf;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #fff;
+            color: #1a1c1f;
+            cursor: pointer;
+        }
+
+        .rv-tools button {
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #06c755;
+            color: #fff;
+        }
+
+        .rv-tools button.danger {
+            background: #e8553b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 14px rgba(0, 0, 0, .06);
+        }
+
+        th,
+        td {
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 14px;
+            border-bottom: 1px solid #eef0f3;
+        }
+
+        th {
+            background: #fafbfc;
+            font-size: 12px;
+            color: #6b7077;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .pill {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+
+        .pill.use {
+            background: #e6f7ee;
+            color: #06a047;
+        }
+
+        .pill.no {
+            background: #eef0f3;
+            color: #6b7077;
+        }
+
+        .pill.pending {
+            background: #fff4e0;
+            color: #d98a00;
+        }
+
+        .cstat {
+            font: inherit;
+            cursor: pointer;
+            border: 1px solid #d8dadf;
+            background: #fff;
+            color: #6b7077;
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            transition: .12s;
+        }
+
+        .cstat:hover {
+            border-color: #06c755;
+            color: #06a047;
+        }
+
+        .cstat.done {
+            background: #e6f7ee;
+            color: #06a047;
+            border-color: #bce8d1;
+        }
+
+        .col-contact {
+            width: 240px;
+            min-width: 240px;
+        }
+
+        .col-date {
+            width: 170px;
+            min-width: 170px;
+        }
+
+        .col-date span {
+            display: block;
+            white-space: nowrap;
+        }
+
+        .cstat-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .cstat-at {
+            font-size: 11px;
+            color: #9aa0a6;
+        }
+
+        .rv-note {
+            background: #fff8ec;
+            border: 1px solid #ffe2b0;
+            color: #8a5a00;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-bottom: 14px;
+        }
+
+        .rv-note b {
+            color: #6b4500;
+        }
+
+        code.code {
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .rv-empty {
+            text-align: center;
+            color: #9aa0a6;
+            padding: 50px 0;
+        }
+
+        /* ログインゲート */
+        .rv-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(20, 24, 31, .6);
+        }
+
+        .rv-gate-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px 28px;
+            width: min(90vw, 360px);
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+        }
+
+        .rv-gate-box h2 {
+            margin: 0 0 6px;
+            font-size: 20px;
+        }
+
+        .rv-gate-box p {
+            font-size: 13px;
+            color: #6b7077;
+            margin: 0 0 18px;
+        }
+
+        .rv-gate-box input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .rv-gate-box button {
+            width: 100%;
+            padding: 12px;
+            border: 0;
+            border-radius: 10px;
+            background: #2f6df0;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .rv-gate-err {
+            color: #e8553b;
+            font-size: 12px;
+            min-height: 14px;
+            margin: 10px 0 0;
+        }
+
+        .tab-sub {
+            display: flex;
+            gap: 8px;
+            margin: 18px 0 10px;
+        }
+
+        .tab-sub button {
+            padding: 8px 16px;
+            border: 1px solid #d8dadf;
+            background: #fff;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #3a3d42;
+        }
+
+        .tab-sub button.on {
+            background: #1a1c1f;
+            color: #fff;
+            border-color: #1a1c1f;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="rv-bar">
+        <b>📋 예약 명단</b>
+        <span class="sp"></span>
+        <a class="home" href="./admin.html">← 관리 메인</a>
+        <button id="rv-logout">로그아웃</button>
+    </div>
+
+    <div class="rv-wrap" id="rv-app" hidden>
+        <div class="rv-head">
+            <h1>LINE 예약 명단</h1>
+        </div>
+
+        <div class="rv-stats" id="rv-stats"></div>
+
+        <div class="tab-sub">
+            <button data-tab="resv" class="on">예약 목록</button>
+            <button data-tab="coupon">쿠폰 발급 현황</button>
+        </div>
+
+        <div class="rv-tools">
+            <input type="search" id="rv-search" placeholder="이름·전화·병원으로 검색">
+            <select id="rv-hospital">
+                <option value="">전체 병원</option>
+            </select>
+            <select id="rv-status">
+                <option value="">전체 상태</option>
+                <option value="미연락">미연락</option>
+                <option value="통화완료">통화완료</option>
+            </select>
+            <button id="rv-csv">CSV 다운로드</button>
+            <span class="sp" style="flex:1"></span>
+            <button class="danger" id="rv-clear">전체 데이터 삭제</button>
+        </div>
+
+        <div class="rv-note">
+            💡 <b>쿠폰은 LINE 연결 전까지 "사용 예정" 상태입니다.</b>
+            손님이 폼에 쿠폰을 입력해도 바로 사용 처리되지 않습니다.
+            관리자가 LINE으로 연락·통화를 확인한 뒤 <b>"미연락" 버튼을 눌러 "✓ 통화완료"로 바꾸면</b>
+            그때 쿠폰이 <b>실제 사용으로 확정</b>됩니다. (통화완료를 취소하면 쿠폰은 다시 사용 가능 상태로 돌아갑니다.)
+        </div>
+
+        <div id="rv-table"></div>
+    </div>
+
+    <script src="./coupon.js"></script>
+    <script src="./reservations.js"></script>
+</body>
+
+</html>
