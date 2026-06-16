@@ -105,13 +105,31 @@
   applyHtml(SECTIONS.ba, OVERRIDE.ba);
   if (OVERRIDE.shorts) renderShorts(OVERRIDE.shorts);
 
+  /* 라이브(일반 보기/미리보기) 탭 전환:
+     관리자 편집기로 추가한 탭/서브탭은 페이지 자체 JS에 전환 로직이 없을 수 있으므로
+     (예: wooa는 원래 평면 페이지) 여기서 공통으로 클릭 전환을 처리한다.
+     - 관리자 모드는 bindTabSwitch가 따로 처리 → 일반 보기에서만 바인딩.
+     - switchTab/switchSub은 함수 선언이라 호이스팅되어 이 시점에서 호출 가능.
+     - #procedure_type에 위임 바인딩 → 오버라이드로 innerHTML이 바뀌어도 유지. */
+  function bindLiveTabs() {
+    var root = q("#procedure_type");
+    if (!root) return;
+    if (!q(".tab", root) && !q(".subtab", root)) return;   // 탭이 있는 페이지에만
+    root.addEventListener("click", function (e) {
+      var sub = e.target.closest(".subtab");
+      if (sub && root.contains(sub)) { switchSub(sub); return; }
+      var tab = e.target.closest(".tab");
+      if (tab && root.contains(tab)) { switchTab(tab); }
+    });
+  }
+
   /* =========================================================
      2) 관리자 모드 판정
      ========================================================= */
   function isAdminParam() {
     return new URLSearchParams(location.search).get("admin") === "1";
   }
-  if (!isAdminParam()) return;                 // 일반 보기는 여기서 종료
+  if (!isAdminParam()) { bindLiveTabs(); return; }   // 일반 보기: 라이브 탭 전환만 켜고 종료
   if (lsGet(AUTH_KEY) !== "1") {               // 미로그인 → admin으로
     location.replace("../admin.html");
     return;
@@ -187,7 +205,10 @@
       /* 그룹(소제목+항목 묶음) 삭제 버튼: 소제목 우상단 */
       "html.lp-admin .prog_sub.lp-grp,html.lp-admin .menu_sub.lp-grp{position:relative;padding-right:36px}" +
       ".lp-add{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 8px);margin:12px auto;padding:10px 16px;border:1.5px dashed #2f6df0;border-radius:10px;background:rgba(47,109,240,.08);color:#2f6df0;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif;font-size:13px}" +
-      "html.lp-admin #signature .sig_track .lp-add{width:180px;min-width:180px;margin:0 8px;align-self:center;flex:0 0 auto}" +
+      "html.lp-admin #signature .sig_track .lp-add{flex:0 0 150px;width:150px;min-width:150px;margin:0 8px;align-self:stretch;flex-direction:column}" +
+      /* 편집 모드: 스냅 때문에 끝까지 스크롤해도 '＋ 시술 추가'가 잘림 → 스냅 끄고 끝 여백 축소해 완전히 보이게 */
+      "html.lp-admin #signature .sig_track{scroll-snap-type:none}" +
+      "html.lp-admin #signature .sig_track::after{flex-basis:16px;min-width:16px}" +
       "html.lp-admin .lp-img{position:relative;cursor:pointer}" +
       "html.lp-admin .lp-img::after{content:'📷 이미지 변경';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:5px 9px;border-radius:6px;pointer-events:none;opacity:0;transition:.15s;white-space:nowrap}" +
       "html.lp-admin .lp-img:hover::after{opacity:1}" +
