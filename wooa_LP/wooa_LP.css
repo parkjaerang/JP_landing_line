@@ -193,3 +193,30 @@ img{
 .footer_sep{
     color: var(--font2);
 }
+
+/* ===== 탭 / 서브탭 (밝은 ink1 배경 위에서도 잘 보이도록 우아 브랜드 톤으로 오버라이드) =====
+   공통 .tab은 어두운 배경 가정(흰 글자 + 12% 흰 배경)이라 wooa의 밝은 배경에선 거의 안 보임.
+   → 평소: 흰 배경 + 브라운 글자, 활성: 브라운 배경 + 흰 글자(골드 포인트) */
+.tab {
+    background-color: #ffffff;
+    color: var(--font1);
+    border: 1px solid rgba(94, 82, 74, 0.28);
+}
+
+.tab.is-active {
+    background-color: var(--font1);
+    color: var(--white);
+    border-color: var(--font1);
+}
+
+.subtab {
+    background-color: #ffffff;
+    color: var(--font1);
+    border: 1px solid rgba(94, 82, 74, 0.28);
+}
+
+.subtab.is-active {
+    background-color: var(--font2);
+    color: var(--white);
+    border-color: var(--font2);
+}
