@@ -212,6 +212,10 @@
       "html.lp-admin .lp-img{position:relative;cursor:pointer}" +
       "html.lp-admin .lp-img::after{content:'📷 이미지 변경';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:5px 9px;border-radius:6px;pointer-events:none;opacity:0;transition:.15s;white-space:nowrap}" +
       "html.lp-admin .lp-img:hover::after{opacity:1}" +
+      /* 새로 추가한 항목의 빈 이미지: 사진 숨기고 'B/A 이미지' 등 placeholder 박스 표시(클릭하면 이미지 변경) */
+      "html.lp-admin .lp-img-empty{min-height:120px;background:#f0f2f5;border:1.5px dashed #b9c0cc;display:flex;align-items:center;justify-content:center}" +
+      "html.lp-admin .lp-img-empty > img{display:none}" +
+      "html.lp-admin .lp-img-empty::before{content:attr(data-imgph);color:#8a93a3;font-size:13px;font-weight:700;font-family:system-ui,sans-serif}" +
       ".lp-map-edit{display:block;width:calc(100% - 0px);margin:0 0 10px;padding:9px;border:1.5px dashed #2f6df0;border-radius:9px;background:rgba(47,109,240,.08);color:#2f6df0;font-weight:700;cursor:pointer;font-family:system-ui;font-size:12px}" +
       "html.lp-admin #procedure_type .tab,html.lp-admin #procedure_type .subtab{position:relative;overflow:visible}" +
       ".lp-tabdel{position:absolute;top:-8px;right:-8px;width:19px;height:19px;border-radius:50%;border:0;background:#e8553b;color:#fff;font-size:12px;line-height:19px;text-align:center;cursor:pointer;z-index:6;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.4);font-family:system-ui}" +
@@ -753,7 +757,10 @@
       holder.classList.add("lp-img");
       holder.addEventListener("click", function (e) {
         e.preventDefault(); e.stopPropagation();
-        pickImage(function (dataUrl) { img.setAttribute("src", dataUrl); img.removeAttribute("srcset"); });
+        pickImage(function (dataUrl) {
+          img.setAttribute("src", dataUrl); img.removeAttribute("srcset");
+          holder.classList.remove("lp-img-empty");   // 사진을 넣으면 빈 이미지 placeholder 해제
+        });
       });
     });
   }
@@ -947,14 +954,29 @@
       });
       return;                                        // 자식이 남아 :empty 아님 → 단위가 힌트 역할
     }
-    // 구분용 plain <span>(예: 기간 사이 '〜')만 자식으로 있으면 통째로 비워 힌트 노출
+    // 구분용 plain <span>(예: 기간 사이 '〜')·줄바꿈 <br>(예: event_name)만 자식으로 있으면 통째로 비워 힌트 노출
     var onlySepSpans = el.children.length > 0 &&
       Array.prototype.slice.call(el.children).every(function (c) {
-        return c.tagName === "SPAN" && !c.className;
+        return (c.tagName === "SPAN" && !c.className) || c.tagName === "BR";
       });
     if (el.children.length && !onlySepSpans) return; // 다른 구조 요소가 있으면 비우지 않음(래퍼 보호)
     el.textContent = "";
     if (ph) el.setAttribute("data-ph", ph);
+  }
+
+  // 1x1 투명 이미지(빈 이미지의 src 자리채움 → 깨진 이미지 아이콘 방지)
+  var BLANK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+
+  /* 새 항목 안의 이미지를 비우고 placeholder 박스로 전환(복제된 사진이 그대로 남지 않게).
+     - #BA의 사진은 'B/A 이미지', 그 외는 '이미지' 안내. 클릭(이미지 변경) 시 lp-img-empty가 해제되어 사진이 보임. */
+  function blankItemImages(node) {
+    qa("img", node).forEach(function (img) {
+      var holder = img.parentElement || img;
+      img.removeAttribute("srcset");
+      img.setAttribute("src", BLANK_IMG);
+      holder.classList.add("lp-img-empty");
+      holder.setAttribute("data-imgph", (holder.closest && holder.closest("#BA")) ? "B/A 이미지" : "이미지");
+    });
   }
 
   /* DOM에 삽입된 새 항목의 모든 텍스트 필드를 빈칸+placeholder로 전환(삽입 후 호출) */
@@ -963,6 +985,7 @@
       qa(pair[0], node).forEach(function (el) { blankField(el, pair[1]); });
       if (node.matches && node.matches(pair[0])) blankField(node, pair[1]);  // 항목 자신이 li 등인 경우
     });
+    blankItemImages(node);
   }
 
   /* =========================================================
@@ -1546,6 +1569,8 @@
     qa(".lp-grp", clone).forEach(function (n) { n.classList.remove("lp-grp"); });
     qa(".lp-img", clone).forEach(function (n) { n.classList.remove("lp-img"); });
     qa("[data-lp-img]", clone).forEach(function (n) { n.removeAttribute("data-lp-img"); });
+    qa(".lp-img-empty", clone).forEach(function (n) { n.classList.remove("lp-img-empty"); });   // 빈 이미지 placeholder 표식 → 저장본에서 제거
+    qa("[data-imgph]", clone).forEach(function (n) { n.removeAttribute("data-imgph"); });
 
     if (sectionName === "hero") cleanupHero(clone);
     if (sectionName === "signature") cleanupSignature(clone);
