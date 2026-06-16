@@ -223,7 +223,9 @@
       ".lp-tabadd:hover,.lp-subadd:hover{background:rgba(47,109,240,.18)}" +
       /* 탭 자체가 없는 섹션/패널에 노출되는 '구조 생성' 부트스트랩 버튼(중앙 블록) */
       "html.lp-admin #procedure_type .lp-tabboot,html.lp-admin #procedure_type .lp-subboot{display:block;width:max-content;max-width:calc(100% - 32px);margin:14px auto;align-self:auto}" +
-      ".lp-shorts-editor{display:flex;flex-direction:column;gap:10px;padding:0 16px;max-width:640px;margin:0 auto}" +
+      /* shorts_grid가 justify-items:center + 2열(wooa)이면 에디터가 콘텐츠 폭으로 줄어 '유튜브 추가'가 줄바꿈됨
+         → 모든 열을 가로질러(span) 폭을 채우게 해 링크 0개여도 긴 형태 유지 */
+      ".lp-shorts-editor{display:flex;flex-direction:column;gap:10px;padding:0 16px;max-width:640px;margin:0 auto;grid-column:1/-1;justify-self:stretch;width:100%;box-sizing:border-box}" +
       ".lp-srow{display:flex;gap:8px;align-items:center;background:#fff;border:1px solid #e7e9ee;border-radius:10px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.05)}" +
       ".lp-srow .lp-sn{font-weight:700;color:#6b7077;font-family:system-ui;font-size:12px}" +
       ".lp-srow input{flex:1;min-width:180px;font:inherit;padding:8px;border:1px solid #ccc;border-radius:8px}" +
@@ -304,9 +306,30 @@
     '</div>';
   /* container: 항목이 0개여도 추가 버튼을 노출할 컨테이너(없으면 항목이 있는 컨테이너에만 버튼).
      template: 복제할 기존 항목이 없을 때 새로 만들 HTML(빈 컨테이너에서 추가 가능하게). */
+  /* 평면 시술(.event_grid > .event_item, wooa)에서 시술이 0개일 때 새로 만들 템플릿 */
+  var EVENT_ITEM_TPL =
+    '<a class="event_item" href="#">' +
+    '<div class="event_info">' +
+    '<p class="event_meta"></p>' +
+    '<h3 class="event_name">시술이름</h3>' +
+    '<p class="event_note"></p>' +
+    '<p class="event_price"><span class="event_now">00<small>万ウォン</small></span></p>' +
+    '</div></a>';
+  /* 시그니처 카드가 0개일 때 새로 만들 최후 폴백 템플릿(실제 구조는 _proto로 우선 복원). */
+  var SIG_CARD_TPL =
+    '<article class="sig_card">' +
+    '<div class="sig_thumb"><img src="" alt=""></div>' +
+    '<div class="sig_body">' +
+    '<h3 class="sig_title">시술명</h3>' +
+    '<p class="sig_desc">간단한 설명</p>' +
+    '</div></article>';
   var ITEM_DEFS = [
-    { wrap: "#signature .sig_track", item: ".sig_card" },
-    { wrap: "#procedure_type", item: ".event_item" },
+    { wrap: "#signature .sig_track", item: ".sig_card", template: SIG_CARD_TPL },
+    // 시그니처가 0개여도 .sig_track 끝에 '＋ 시술 추가' 노출
+    { wrap: "#signature", item: ".sig_card", container: ".sig_track", template: SIG_CARD_TPL },
+    { wrap: "#procedure_type", item: ".event_item", template: EVENT_ITEM_TPL },
+    // wooa 평면 구조: 시술이 0개여도 .event_grid 끝에 '＋ 시술 추가' 노출(다른 LP엔 .event_grid 없음 → 영향 없음)
+    { wrap: "#procedure_type", item: ".event_item", container: ".event_grid", template: EVENT_ITEM_TPL },
     { wrap: "#procedure_type", item: ".pkg_steps li", addLabel: "＋ 단계 추가",
       container: ".pkg_steps", template: "<li>단계 설명</li>" },
     { wrap: "#procedure_type", item: ".prog_pkg", addLabel: "＋ 프로그램 추가",
@@ -366,6 +389,22 @@
     bindTabControls();
     markPlaceholders();
     markOptionalFields();
+    renumberSignature();
+  }
+
+  /* 시그니처 카드의 번호 배지(.sig_badge: 'Kleam Signature 1' 등)를 화면 순서대로 다시 매김.
+     - 카드를 추가/삭제하면 마지막 숫자만 순번(1,2,3…)으로 교체(접두어 'Kleam Signature '는 유지).
+     - 숫자가 없는 배지(다른 LP)는 건드리지 않음. */
+  function renumberSignature() {
+    var track = q("#signature .sig_track");
+    if (!track) return;
+    var cards = qa(".sig_card", track).filter(function (n) { return n.parentElement === track; });
+    cards.forEach(function (card, i) {
+      var badge = q(".sig_badge", card);
+      if (!badge || !/\d/.test(badge.textContent)) return;
+      var n = i + 1;
+      badge.textContent = badge.textContent.replace(/(\d+)(\D*)$/, function (m, num, tail) { return n + tail; });
+    });
   }
 
   /* 컨테이너 직속 자식 중 첫 추가버튼(.lp-add)을 반환.
@@ -787,6 +826,11 @@
       var wrap = q(def.wrap);
       if (!wrap) return;
       qa(def.item, wrap).forEach(function (item) {
+        // 이 페이지의 실제 항목 구조를 한 번 기억(_proto) → 항목을 모두 지운 뒤 추가 시
+        // 정적 템플릿 대신 원래 구조 그대로 복원(LP마다 다른 .sig_body/.sig_overlay 등 호환).
+        if (!def._proto) {
+          var pc = item.cloneNode(true); cleanClone(pc); def._proto = pc.outerHTML;
+        }
         if (item.getAttribute("data-lp-itembound") === "1") return;
         item.setAttribute("data-lp-itembound", "1");
         item.classList.add("lp-item");
@@ -797,7 +841,7 @@
         del.title = "이 항목 삭제";
         del.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
-          if (confirm("이 항목을 삭제할까요?")) { var p = item.parentElement; item.remove(); toast("삭제했습니다"); }
+          if (confirm("이 항목을 삭제할까요?")) { var p = item.parentElement; item.remove(); renumberSignature(); toast("삭제했습니다"); }
         });
         item.appendChild(del);
       });
@@ -831,10 +875,13 @@
           var last = qa(def.item, cont).filter(function (n) { return n.parentElement === cont; }).pop();
           var clone;
           if (last) { clone = last.cloneNode(true); cleanClone(clone); }   // 기존 항목 복제
-          else if (def.template) {                                         // 항목이 없으면 템플릿으로 생성
-            var tmp = document.createElement("div");
-            tmp.innerHTML = def.template;
-            clone = tmp.firstElementChild;
+          else {                                                           // 항목이 0개: 기억해 둔 구조(_proto) 우선, 없으면 정적 템플릿
+            var tplHTML = def._proto || def.template;
+            if (tplHTML) {
+              var tmp = document.createElement("div");
+              tmp.innerHTML = tplHTML;
+              clone = tmp.firstElementChild;
+            }
           }
           if (!clone) return;
           cont.insertBefore(clone, firstAddBtn(cont) || add);   // 추가버튼 묶음 위에 삽입
