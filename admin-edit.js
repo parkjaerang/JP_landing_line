@@ -180,7 +180,7 @@
       "html.lp-admin .price_prog > .prog_title,html.lp-admin .menu_cat > .menu_cat_title{padding-right:104px}" +
       ".lp-catdel{position:absolute;top:8px;right:42px;z-index:62;border:0;border-radius:7px;background:#e8553b;color:#fff;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:6px 10px;font-family:system-ui,sans-serif;box-shadow:0 1px 5px rgba(0,0,0,.35);white-space:nowrap}" +
       /* 편집 모드 아코디언 토글(편집 대상 아님): 라이브 chevron과 동일한 동작 */
-      ".lp-acc-toggle{position:absolute;top:7px;right:8px;z-index:63;width:26px;height:26px;border-radius:50%;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.2)}" +
+      ".lp-acc-toggle{position:absolute;top:7px;right:8px;z-index:63;width:26px;height:26px;border-radius:50%;border:0;background:#A1CCC5;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.2)}" +
       ".lp-acc-toggle::before{content:'';width:8px;height:8px;margin-top:-3px;border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(45deg);transition:transform .25s ease}" +
       "html.lp-admin .price_prog.lp-collapsed > .lp-acc-toggle::before,html.lp-admin .menu_cat.lp-collapsed > .lp-acc-toggle::before{transform:rotate(-135deg);margin-top:3px}" +
       "html.lp-admin .price_prog.lp-collapsed > :not(.prog_title):not(.lp-acc-toggle):not(.lp-catdel),html.lp-admin .menu_cat.lp-collapsed > :not(.menu_cat_title):not(.lp-acc-toggle):not(.lp-catdel){display:none}" +
