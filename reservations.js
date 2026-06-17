@@ -1,12 +1,12 @@
 /* =============================================================
-   reservations.js  —  予約名簿(reservations.html)
-   - admin と同じパスワードで保護(lp_admin_authed)
-   - LPCoupon.Store から予約 / クーポンデータを読み込み表示
+   reservations.js  —  예약 명단(reservations.html)
+   - admin과 동일한 비밀번호로 보호(lp_admin_authed)
+   - LPCoupon.Store에서 예약 / 쿠폰 데이터를 읽어와 표시
    ============================================================= */
 (function () {
   "use strict";
 
-  var ADMIN_PASSWORD = "admin1234";   // admin.js と同じパスワード
+  var ADMIN_PASSWORD = "admin1234";   // admin.js와 동일한 비밀번호
   var AUTH_KEY = "lp_admin_authed";
 
   /* 편집 UI 한국어/일본어 전환(admin-i18n.js). 미로드 시 원문 그대로 반환 */
@@ -43,7 +43,7 @@
     });
   }
 
-  /* ---- ログインゲート ---- */
+  /* ---- 로그인 게이트 ---- */
   function showGate() {
     var gate = document.createElement("div");
     gate.className = "rv-gate";
@@ -64,10 +64,10 @@
     pw.focus();
   }
 
-  /* ---- メイン ---- */
+  /* ---- 메인 ---- */
   function enter() {
     document.getElementById("rv-app").hidden = false;
-    migrate();   // 旧データに id / 連絡ステータス等のフィールドを補完
+    migrate();   // 옛 데이터에 id / 연락 상태 등 필드를 보완
 
     document.querySelectorAll(".tab-sub button").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -92,7 +92,7 @@
       buildHospitalOptions();
       render();
     });
-    // 連絡ステータス トグル(イベント委譲)
+    // 연락 상태 토글(이벤트 위임)
     document.getElementById("rv-table").addEventListener("click", function (e) {
       var btn = e.target.closest ? e.target.closest("button.cstat") : null;
       if (btn) toggleContact(btn.getAttribute("data-id"));
@@ -100,7 +100,7 @@
     render();
   }
 
-  /* ---- 旧データの移行(id・連絡ステータス・クーポン確定フラグを補完) ---- */
+  /* ---- 옛 데이터 마이그레이션(id・연락 상태・쿠폰 확정 플래그 보완) ---- */
   function migrate() {
     if (!Store) return;
     var list = Store.getReservations();
@@ -115,7 +115,7 @@
       if (r.contactStatus === undefined) { r.contactStatus = "미연락"; changed = true; }
       if (r.contactedAt === undefined) { r.contactedAt = ""; changed = true; }
       if (r.couponConfirmed === undefined) {
-        // 旧フロー(送信時に即 redeem)で既に使用済みのものは確定扱いにする
+        // 옛 플로우(전송 시 즉시 redeem)에서 이미 사용 완료된 것은 확정 처리한다
         var c = r.couponCode ? byCode[r.couponCode] : null;
         r.couponConfirmed = !!(r.couponUsed && c && c.used);
         changed = true;
@@ -124,7 +124,7 @@
     if (changed) { try { localStorage.setItem("lp_reservations_v1", JSON.stringify(list)); } catch (e) {} }
   }
 
-  /* ---- 連絡ステータスの切替(클릭 トグル) ---- */
+  /* ---- 연락 상태 전환(클릭 토글) ---- */
   function toggleContact(id) {
     var list = Store.getReservations();
     var r = null;
@@ -132,7 +132,7 @@
     if (!r) return;
     var done = r.contactStatus === "통화완료";
     if (!done) {
-      // 미연락 → 통화완료:クーポンがあれば使用確定
+      // 미연락 → 통화완료: 쿠폰이 있으면 사용 확정
       var patch = { contactStatus: "통화완료", contactedAt: new Date().toISOString() };
       if (r.couponCode && !r.couponConfirmed) {
         Store.confirmCoupon(r.couponCode, { hospital: r.hospital, name: r.name });
@@ -140,7 +140,7 @@
       }
       Store.updateReservation(id, patch);
     } else {
-      // 통화완료 → 미연락:クーポンを使用前に戻す
+      // 통화완료 → 미연락: 쿠폰을 사용 전으로 되돌림
       if (r.couponCode && r.couponConfirmed &&
           !confirm(tr("통화완료를 취소하면 이 예약의 쿠폰 사용도 취소되어 다시 사용 가능 상태로 돌아갑니다. 계속하시겠습니까?"))) {
         return;
@@ -257,7 +257,7 @@
     wrap.innerHTML = html;
   }
 
-  /* 連絡ステータス セル(클릭하면 토글) */
+  /* 연락 상태 셀(클릭하면 토글) */
   function contactCell(r) {
     var done = r.contactStatus === "통화완료";
     return "<span class='cstat-wrap'>" +
@@ -267,7 +267,7 @@
            "</span>";
   }
 
-  /* クーポン セル(사용 안함 / 사용 예정 / 사용 확정) */
+  /* 쿠폰 셀(사용 안함 / 사용 예정 / 사용 확정) */
   function couponCell(r) {
     if (!r.couponCode) return "<span class='pill no'>" + tr("사용 안함") + "</span>";
     if (r.couponConfirmed) return "<span class='pill use'>" + tr("5%OFF 사용") + "</span>";
@@ -302,7 +302,7 @@
     wrap.innerHTML = html;
   }
 
-  /* ---- CSV ダウンロード ---- */
+  /* ---- CSV 다운로드 ---- */
   function csvCell(v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; }
   function downloadCsv() {
     var lines = [], name;

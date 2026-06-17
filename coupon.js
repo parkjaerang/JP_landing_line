@@ -1,12 +1,12 @@
 /* =============================================================
-   coupon.js  —  LINE 初回限定 5%OFF クーポン + 予約フロー
+   coupon.js  —  LINE 최초 한정 5%OFF 쿠폰 + 예약 플로우
    -------------------------------------------------------------
-   ・index ページ : クーポン受取ポップアップ(電話番号→6桁コード発行)
-   ・各 LP ページ : LINE ボタン → 予約モーダル(氏名/電話/クーポン使用)
-                    → クーポン検証・使用処理 → QR + LINE リンク表示
-   ・予約は localStorage に記録され、reservations.html で閲覧可能
-   ・保存は localStorage のみ(同じブラウザ内でのみ有効なデモ)
-     ※本番運用ではこの "Store" 層をバックエンド API に差し替えてください。
+   ・index 페이지 : 쿠폰 수령 팝업(전화번호→6자리 코드 발행)
+   ・각 LP 페이지 : LINE 버튼 → 예약 모달(이름/전화/쿠폰 사용)
+                    → 쿠폰 검증·사용 처리 → QR + LINE 링크 표시
+   ・예약은 localStorage에 기록되며 reservations.html에서 조회 가능
+   ・저장은 localStorage만(같은 브라우저 내에서만 유효한 데모)
+     ※실제 운영에서는 이 "Store" 계층을 백엔드 API로 교체하세요.
    ============================================================= */
 (function () {
   "use strict";
@@ -28,20 +28,20 @@
     ceramique_LP: { name: "Ceramique",       lineUrl: "", oaId: "" },
     lovae_LP:     { name: "Lovae",           lineUrl: "", oaId: "" }
   };
-  /* ▲▲▲ 設定ここまで ▲▲▲ */
+  /* ▲▲▲ 설정 끝 ▲▲▲ */
 
-  /* ---- localStorage キー ---- */
+  /* ---- localStorage 키 ---- */
   var K_COUPONS = "lp_coupons_v1";        // { CODE: { code, phone, issuedAt, used, usedAt, held, heldAt, hospital, name } }
-  var K_PHONES  = "lp_phone_index_v1";    // { phone: CODE }  電話番号→コード(1番号1発行)
+  var K_PHONES  = "lp_phone_index_v1";    // { phone: CODE }  전화번호→코드(번호당 1회 발행)
   var K_RESV    = "lp_reservations_v1";   // [ { id, name, phone, hospital, hospitalName, couponUsed(申込), couponConfirmed(確定), couponCode, contactStatus, contactedAt, createdAt } ]
 
-  /* ---- localStorage ヘルパ ---- */
+  /* ---- localStorage 헬퍼 ---- */
   function lsGet(k)    { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   function jget(k, def){ var r = lsGet(k); if (!r) return def; try { return JSON.parse(r); } catch (e) { return def; } }
   function jset(k, v)  { return lsSet(k, JSON.stringify(v)); }
 
-  /* ---- ページキー(例: wooa_LP) ---- */
+  /* ---- 페이지 키(예: wooa_LP) ---- */
   function getPageKey() {
     var parts = location.pathname.split("/").filter(Boolean);
     var file = parts[parts.length - 1] || "";
@@ -50,10 +50,10 @@
     return decodeURIComponent(key);
   }
 
-  /* ---- 電話番号の正規化(数字のみ) ---- */
+  /* ---- 전화번호 정규화(숫자만) ---- */
   function normPhone(p) { return String(p || "").replace(/[^0-9]/g, ""); }
 
-  /* ---- 6桁コード生成(英大文字 + 数字、紛らわしい文字 O/0/I/1 を除外) ---- */
+  /* ---- 6자리 코드 생성(영문 대문자 + 숫자, 혼동되는 문자 O/0/I/1 제외) ---- */
   function randomCode() {
     var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // O,0,I,1 除外
     var s = "";
@@ -70,21 +70,21 @@
     var coupons = jget(K_COUPONS, {});
     var code, guard = 0;
     do { code = randomCode(); guard++; }
-    while (coupons[code] && guard < 50);  // 既存(使用済み含む)コードと衝突しないように
+    while (coupons[code] && guard < 50);  // 기존(사용 완료 포함) 코드와 충돌하지 않도록
     return code;
   }
 
   /* =====================================================================
-     Store : クーポン/予約データのアクセス層(差し替えポイント)
+     Store : 쿠폰/예약 데이터 접근 계층(교체 포인트)
      ===================================================================== */
   var Store = {
-    /* 電話番号にクーポンを発行(1番号につき1回まで) */
+    /* 전화번호로 쿠폰 발행(번호당 1회까지) */
     issueCoupon: function (rawPhone) {
       var phone = normPhone(rawPhone);
       if (phone.length < 8) return { ok: false, reason: "invalid" };
       var phones = jget(K_PHONES, {});
       if (phones[phone]) {
-        return { ok: false, reason: "already", code: phones[phone] }; // 既に発行済み
+        return { ok: false, reason: "already", code: phones[phone] }; // 이미 발행됨
       }
       var code = genUniqueCode();
       var coupons = jget(K_COUPONS, {});
@@ -98,7 +98,7 @@
       return { ok: true, code: code };
     },
 
-    /* コードの有効性チェック */
+    /* 코드 유효성 검사 */
     validateCoupon: function (rawCode) {
       var code = String(rawCode || "").trim().toUpperCase();
       if (!code) return { valid: false, reason: "empty" };
@@ -109,7 +109,7 @@
       return { valid: true, code: code };
     },
 
-    /* コードを使用済みにする(即時確定。レガシー用に残置) */
+    /* 코드를 사용 완료로 처리(즉시 확정. 레거시용으로 잔존) */
     redeemCoupon: function (rawCode, info) {
       var code = String(rawCode || "").trim().toUpperCase();
       var coupons = jget(K_COUPONS, {});
@@ -123,7 +123,7 @@
       return true;
     },
 
-    /* 予約フォーム送信時:クーポンを「保留(held)」にする(まだ使用確定しない) */
+    /* 예약 폼 전송 시: 쿠폰을 "보류(held)" 상태로 둔다(아직 사용 확정 안 함) */
     holdCoupon: function (rawCode, info) {
       var code = String(rawCode || "").trim().toUpperCase();
       var coupons = jget(K_COUPONS, {});
@@ -137,7 +137,7 @@
       return true;
     },
 
-    /* 管理者が「通話完了」をチェック → クーポンを使用確定 */
+    /* 관리자가 "통화 완료"를 체크 → 쿠폰 사용 확정 */
     confirmCoupon: function (rawCode, info) {
       var code = String(rawCode || "").trim().toUpperCase();
       var coupons = jget(K_COUPONS, {});
@@ -152,7 +152,7 @@
       return true;
     },
 
-    /* 「通話完了」取消 → クーポンを保留に戻す(再び使用可能扱い) */
+    /* "통화 완료" 취소 → 쿠폰을 보류로 되돌림(다시 사용 가능 상태로) */
     releaseCoupon: function (rawCode) {
       var code = String(rawCode || "").trim().toUpperCase();
       var coupons = jget(K_COUPONS, {});
@@ -165,7 +165,7 @@
       return true;
     },
 
-    /* 予約を記録(id を付与して返す) */
+    /* 예약을 기록(id를 부여해 반환) */
     addReservation: function (rec) {
       var list = jget(K_RESV, []);
       if (!rec.id) {
@@ -177,7 +177,7 @@
       return rec;
     },
 
-    /* 予約レコードを id で部分更新 */
+    /* 예약 레코드를 id로 부분 갱신 */
     updateReservation: function (id, patch) {
       var list = jget(K_RESV, []);
       var changed = false;
@@ -199,14 +199,14 @@
     }
   };
 
-  /* ---- QR 画像 URL(qrserver API でテキスト/URLを QR 化) ---- */
+  /* ---- QR 이미지 URL(qrserver API로 텍스트/URL을 QR로 변환) ---- */
   function qrImageUrl(data, size) {
     var s = size || 220;
     return "https://api.qrserver.com/v1/create-qr-code/?size=" + s + "x" + s +
            "&margin=8&data=" + encodeURIComponent(data || "LINE設定待ち");
   }
 
-  /* ---- LINE メッセージ送信 URL(oaId があればコードを自動入力) ---- */
+  /* ---- LINE 메시지 전송 URL(oaId가 있으면 코드를 자동 입력) ---- */
   function buildLineUrl(cfg, prefillText) {
     if (cfg && cfg.oaId && prefillText) {
       return "https://line.me/R/oaMessage/" + encodeURIComponent(cfg.oaId) +
@@ -217,7 +217,7 @@
   }
 
   /* =====================================================================
-     スタイル注入
+     스타일 주입
      ===================================================================== */
   function injectStyle() {
     if (document.getElementById("lp-coupon-style")) return;
@@ -256,14 +256,14 @@
       ".cp-tag{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:10px}" +
       ".cp-tag.use{background:#e6f7ee;color:#06a047}" +
       ".cp-tag.no{background:#eef0f3;color:#6b7077}" +
-      // index 右下の再表示ボタン
+      // index 우측 하단 재표시 버튼
       ".cp-fab{position:fixed;right:16px;bottom:16px;z-index:9000;background:#06c755;color:#fff;border:0;" +
       "border-radius:999px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer;" +
       "box-shadow:0 6px 20px rgba(6,199,85,.4);font-family:system-ui,sans-serif}";
     document.head.appendChild(s);
   }
 
-  /* ---- モーダル土台 ---- */
+  /* ---- 모달 베이스 ---- */
   function openModal(buildInner) {
     injectStyle();
     var mask = document.createElement("div");
@@ -288,7 +288,7 @@
   }
 
   /* =====================================================================
-     ① index ページ : クーポン受取ポップアップ
+     ① index 페이지 : 쿠폰 수령 팝업
      ===================================================================== */
   function couponIssueView(content, close) {
     content.innerHTML =
@@ -343,7 +343,7 @@
     var SEEN = "lp_coupon_popup_seen";
     function show() { openModal(couponIssueView); }
 
-    // 初回のみ自動表示(セッション単位)
+    // 최초 1회만 자동 표시(세션 단위)
     var seen = false;
     try { seen = sessionStorage.getItem(SEEN) === "1"; } catch (e) {}
     if (!seen) {
@@ -351,11 +351,11 @@
       setTimeout(show, 700);
     }
 
-    // ヘッダーの 5%OFF バナーをクリックで再表示
+    // 헤더의 5%OFF 배너 클릭 시 재표시
     var banner = document.querySelector(".discount");
     if (banner) { banner.style.cursor = "pointer"; banner.addEventListener("click", show); }
 
-    // 右下の常設ボタン
+    // 우측 하단 상시 버튼
     injectStyle();
     var fab = document.createElement("button");
     fab.className = "cp-fab";
@@ -366,7 +366,7 @@
   }
 
   /* =====================================================================
-     ② 各 LP ページ : LINE ボタン → 予約モーダル
+     ② 각 LP 페이지 : LINE 버튼 → 예약 모달
      ===================================================================== */
   function reservationView(content, close, pageKey, cfg) {
     var useCoupon = false;
@@ -422,16 +422,16 @@
                                      "クーポンコードを入力してください。";
           return;
         }
-        // ★ ここでは使用確定しない。LINE 連絡完了まで「保留」にしておく
+        // ★ 여기서는 사용 확정하지 않는다. LINE 연락 완료까지 "보류"로 둔다
         Store.holdCoupon(code, { hospital: pageKey, name: name });
       }
 
-      // 予約を記録(couponConfirmed は管理者の「通話完了」チェックで true になる)
+      // 예약을 기록(couponConfirmed는 관리자의 "통화 완료" 체크로 true가 된다)
       Store.addReservation({
         name: name, phone: phone,
         hospital: pageKey, hospitalName: cfg.name,
-        couponUsed: !!useCoupon,        // 申込時にクーポンを入力したか
-        couponConfirmed: false,         // 実際に使用確定したか(LINE 連絡後)
+        couponUsed: !!useCoupon,        // 신청 시 쿠폰을 입력했는지
+        couponConfirmed: false,         // 실제로 사용 확정됐는지(LINE 연락 후)
         couponCode: useCoupon ? code : "",
         contactStatus: "미연락",         // 미연락 | 통화완료
         contactedAt: "",
@@ -476,13 +476,13 @@
         e.preventDefault();
         openModal(function (content, close) { reservationView(content, close, pageKey, cfg); });
       });
-      // 内側の <a href="#"> の既定遷移も止める
+      // 내부 <a href="#">의 기본 이동도 막는다
       var a = btn.querySelector("a");
       if (a) a.addEventListener("click", function (e) { e.preventDefault(); });
     });
   }
 
-  /* ---- 公開 API(reservations.html から利用) ---- */
+  /* ---- 공개 API(reservations.html에서 사용) ---- */
   window.LPCoupon = {
     Store: Store,
     LINE_CONFIG: LINE_CONFIG,
@@ -490,13 +490,13 @@
   };
 
   /* =====================================================================
-     初期化
+     초기화
      ===================================================================== */
   document.addEventListener("DOMContentLoaded", function () {
     if (document.querySelector(".line_btn")) {
-      initLPButtons();                          // LP ページ
+      initLPButtons();                          // LP 페이지
     } else if (document.body.hasAttribute("data-coupon-popup")) {
-      initIndexPopup();                         // index ページ
+      initIndexPopup();                         // index 페이지
     }
   });
 })();

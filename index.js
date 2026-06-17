@@ -1,4 +1,4 @@
-// 6枚ずつ表示。残りは「もっと見る」で6枚ずつ追加表示する。
+// 6장씩 표시. 나머지는 "더보기"로 6장씩 추가 표시한다.
 (function () {
     var STEP = 6;
     var gallery = document.querySelector(".gallery");
@@ -8,7 +8,7 @@
     var cards = Array.prototype.slice.call(gallery.querySelectorAll(".card"));
     var shown = 0;
 
-    // ページ数バッジをカード数に合わせて自動更新
+    // 페이지 수 배지를 카드 수에 맞춰 자동 갱신
     var badge = document.querySelector(".count-badge");
     if (badge) {
         badge.textContent = cards.length + (cards.length === 1 ? " Page" : " Pages");
