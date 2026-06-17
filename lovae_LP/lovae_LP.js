@@ -144,7 +144,15 @@ if (sigTrack) {
         }
     }, true);
 
-    start();
+    // 화면에 보이면 자동 슬라이드 시작
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries, obs) => {
+            if (entries.some((en) => en.isIntersecting)) { start(); obs.disconnect(); }
+        }, { threshold: 0.2 });
+        io.observe(sigTrack);
+    } else {
+        start();
+    }
 }
 
 /* ===== REVIEW 슬라이드 (화살표 + 드래그) ===== */
@@ -357,7 +365,15 @@ function initCardSlider(track, cardSelector, { interval = 2500, gap = 16 } = {})
         }
     }, true);
 
-    start();
+    // 화면에 보이면 자동 슬라이드 시작
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries, obs) => {
+            if (entries.some((en) => en.isIntersecting)) { start(); obs.disconnect(); }
+        }, { threshold: 0.2 });
+        io.observe(track);
+    } else {
+        start();
+    }
 }
 
 initCardSlider(document.querySelector('.doctors_wrap'), '.doctor_card', { interval: 3000 });
