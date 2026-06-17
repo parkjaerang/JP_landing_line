@@ -217,6 +217,11 @@ img{
     transform: translate(-50%, -70%) rotate(45deg);
 }
 
+/* 펼침 시 화살표 180도 회전 */
+.menu_cat.open .menu_arrow{
+    transform: rotate(180deg);
+}
+
 .menu_body{
     max-height: 0;
     overflow: hidden;
