@@ -263,7 +263,12 @@
       if (act === "save") doSave();
       else if (act === "reset") doReset();
       else if (act === "preview") window.open(location.pathname, "_blank");
-      else if (act === "exit") location.href = "../admin.html";
+      else if (act === "exit") {
+        // 편집은 admin.html에서 새 창(window.open)으로 열린다 → 종료 시 그 창을 닫는다.
+        window.close();
+        // 스크립트로 열린 창이 아니어서 닫히지 않는 경우(직접 접속 등)엔 admin으로 이동.
+        setTimeout(function () { location.href = "../admin.html"; }, 120);
+      }
     });
   }
 
