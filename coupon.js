@@ -297,7 +297,7 @@
       "<p class='cp-sub'>電話番号を入力するとクーポンコードを発行します。<br>" +
       "クーポンは<b>お一人様1回・1院のみ</b>ご利用いただけます。</p>" +
       "<div class='cp-field'><label>電話番号</label>" +
-      "<input type='tel' id='cp-phone' inputmode='numeric' placeholder='09012345678' autocomplete='tel'></div>" +
+      "<input type='tel' id='cp-phone' inputmode='numeric' placeholder='' autocomplete='tel'></div>" +
       "<button class='cp-btn' id='cp-issue'>クーポンを受け取る</button>" +
       "<p class='cp-err' id='cp-err'></p>" +
       "<p class='cp-note'>※ 発行されたコードは、各病院ページの LINE 予約時にご入力ください。<br>" +
@@ -376,9 +376,9 @@
       "<p class='cp-sub'>お名前と電話番号をご入力ください。<br>" +
       "初回限定 <b>5％OFF</b> クーポンをお持ちの方はご利用いただけます。</p>" +
       "<div class='cp-field'><label>お名前</label>" +
-      "<input type='text' id='cp-name' placeholder='山田 花子' autocomplete='name'></div>" +
+      "<input type='text' id='cp-name' placeholder='' autocomplete='name'></div>" +
       "<div class='cp-field'><label>電話番号</label>" +
-      "<input type='tel' id='cp-phone' inputmode='numeric' placeholder='09012345678' autocomplete='tel'></div>" +
+      "<input type='tel' id='cp-phone' inputmode='numeric' placeholder='' autocomplete='tel'></div>" +
       "<label style='display:block;text-align:left;font-size:12px;font-weight:700;color:#3a3d42;margin-bottom:5px'>" +
       "クーポンを使用しますか？</label>" +
       "<div class='cp-toggle'>" +
