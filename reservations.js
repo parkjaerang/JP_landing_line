@@ -225,7 +225,7 @@
     var wrap = document.getElementById("rv-table");
     if (!rows.length) { wrap.innerHTML = "<div class='rv-empty'>예약 데이터가 없습니다.</div>"; return; }
     var html = "<table><thead><tr>" +
-      "<th class='col-date'>일시</th><th>이름</th><th>전화번호</th><th>이용 병원</th><th class='col-contact'>연락 상태</th><th>쿠폰</th><th>코드</th>" +
+      "<th class='col-date'>일시</th><th>이름</th><th>전화번호</th><th>이용 병원</th><th class='col-contact'>연락 상태</th><th class='col-coupon'>쿠폰</th><th class='col-code'>코드</th>" +
       "</tr></thead><tbody>";
     rows.forEach(function (r) {
       html += "<tr>" +
@@ -234,8 +234,8 @@
         "<td>" + esc(r.phone) + "</td>" +
         "<td>" + esc(r.hospitalName || r.hospital) + "</td>" +
         "<td class='col-contact'>" + contactCell(r) + "</td>" +
-        "<td>" + couponCell(r) + "</td>" +
-        "<td>" + (r.couponCode ? "<code class='code'>" + esc(r.couponCode) + "</code>" : "—") + "</td>" +
+        "<td class='col-coupon'>" + couponCell(r) + "</td>" +
+        "<td class='col-code'>" + (r.couponCode ? "<code class='code'>" + esc(r.couponCode) + "</code>" : "—") + "</td>" +
         "</tr>";
     });
     html += "</tbody></table>";

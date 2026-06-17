@@ -30,7 +30,8 @@
     event: "#procedure_type",
     doctors: "#doctors",
     info: "#information",
-    ba: "#BA"
+    ba: "#BA",
+    footer: "#footer"
   };
   var SHORTS_GRID = "#contents .shorts_grid";
 
@@ -103,6 +104,7 @@
   applyHtml(SECTIONS.doctors, OVERRIDE.doctors);
   applyHtml(SECTIONS.info, OVERRIDE.info);
   applyHtml(SECTIONS.ba, OVERRIDE.ba);
+  applyHtml(SECTIONS.footer, OVERRIDE.footer);
   if (OVERRIDE.shorts) renderShorts(OVERRIDE.shorts);
 
   /* 라이브(일반 보기/미리보기) 탭 전환:
@@ -282,7 +284,8 @@
             ".tab", ".subtab", ".plan-switch-btn", ".section_title"],
     doctors: [".doctor_role", ".doctor_name", ".doctor_career li", ".section_title"],
     info: [".info_label", ".info_text", ".info_note", ".info_hours dt", ".info_hours dd", ".section_title"],
-    ba: ["figcaption", ".ba_label", ".section_title"]
+    ba: ["figcaption", ".ba_label", ".section_title"],
+    footer: [".footer_name", ".footer_line"]
   };
   /* classone식 시술(카드) 템플릿 — 그룹 안에 복제할 기존 시술이 없을 때 사용 */
   var GROUP_ITEM_TPL =
@@ -1430,11 +1433,17 @@
 
   /* 편집 모드에서 거슬리는 자동 움직임 정지(시그니처 자동 슬라이드 / 원장 카드 슬라이드 등) */
   function tameMotion() {
+    // 모든 페이지의 자동 슬라이드는 element.scrollTo({behavior:'smooth'})로 동작한다.
+    // → Element.prototype.scrollTo 자체를 무력화해 편집 중 모든 자동 스크롤을 끈다.
+    //   드래그 좌우 이동은 scrollLeft 대입이라 영향 없이 그대로 유지된다.
+    try {
+      if (window.Element && Element.prototype && Element.prototype.scrollTo) {
+        Element.prototype.scrollTo = function () {};
+      }
+    } catch (e) {}
     // 드래그 스크롤 슬라이더(시그니처·원장소개)는 포인터 캡처로 카드 내부 ×/이미지/추가 버튼
-    // 클릭을 가로챔 → 캡처/자동 스크롤을 무력화해 삭제 버튼이 정상 동작하게 한다.
+    // 클릭을 가로챔 → 캡처를 무력화해 삭제·추가 버튼이 정상 동작하게 한다.
     qa("#signature .sig_track, #doctors .doctors_wrap").forEach(function (st) {
-      // 자동 슬라이드는 scrollTo로 동작 → 무력화(드래그 스크롤은 scrollLeft라 유지)
-      try { st.scrollTo = function () {}; } catch (e) {}
       try { st.setPointerCapture = function () {}; } catch (e) {}
       try { st.releasePointerCapture = function () {}; } catch (e) {}
     });
@@ -1704,6 +1713,7 @@
     if (q(SECTIONS.doctors)) ov.doctors = snapshot(SECTIONS.doctors, "doctors");
     if (q(SECTIONS.info)) ov.info = snapshot(SECTIONS.info, "info");
     if (q(SECTIONS.ba)) ov.ba = snapshot(SECTIONS.ba, "ba");
+    if (q(SECTIONS.footer)) ov.footer = snapshot(SECTIONS.footer, "footer");
     if (q(SHORTS_GRID)) ov.shorts = collectShorts();
     var ok = saveOverride(ov);
     OVERRIDE = ov;
