@@ -180,7 +180,7 @@
       /* 가격 단위(万ウォン 등 <small> 또는 .lp-unit)는 편집 대상에서 제외: 선택·수정 불가, 편집 외곽선 미표시 */
       "html.lp-admin #procedure_type small,html.lp-admin .lp-unit,html.lp-admin #procedure_type .event_unit{-webkit-user-modify:read-only!important;user-select:none;outline:none!important;cursor:default}" +
       /* 비어 있는 소제목 등: data-ph 안내문구를 흐리게 표시(실제 콘텐츠는 빈 상태 → view 미표시) */
-      "html.lp-admin [contenteditable='true'][data-ph]:empty::before{content:attr(data-ph);color:#9aa0a6}" +
+      "html.lp-admin [contenteditable='true'][data-ph]:empty::before{content:attr(data-ph);}" +
       /* 클릭 요소는 pointer 커서(편집용 텍스트 커서보다 우선) */
       "html.lp-admin a,html.lp-admin button,html.lp-admin [role='button'],html.lp-admin .tab,html.lp-admin .subtab,html.lp-admin .plan-switch-btn,html.lp-admin .faq_q,html.lp-admin .faq_arrow,html.lp-admin .line_btn,html.lp-admin label,html.lp-admin select,html.lp-admin summary,html.lp-admin .swiper-button-next,html.lp-admin .swiper-button-prev{cursor:pointer!important}" +
       "html.lp-admin .lp-item{position:relative}" +
@@ -377,6 +377,7 @@
   ];
 
   function refreshEditables() {
+    ensureEventOff();   // wooa: 시술마다 할인율(.event_off) 입력칸 보장(아래 편집/placeholder 처리가 이어받음)
     Object.keys(TEXT_SELECTORS).forEach(function (sec) {
       var root = q(SECTIONS[sec]);
       if (!root) return;
@@ -762,6 +763,23 @@
     });
   }
 
+  /* wooa 평면 이벤트(.event_info 래퍼)에 할인율(.event_off) 입력칸을 보장.
+     - .event_price 안에 .event_now는 있고 .event_off가 없으면 빈 .event_off를 .event_now 앞에 삽입.
+     - 비워 두면 저장 시 cleanupEvent가 제거 → view에 표시되지 않음(빈 할인율은 사라짐).
+     - .event_info는 wooa 전용 래퍼라 다른 LP(세라미크/러베/클래스원)에는 영향 없음. */
+  function ensureEventOff() {
+    var ev = q("#procedure_type");
+    if (!ev) return;
+    qa(".event_item .event_info .event_price", ev).forEach(function (price) {
+      if (q(".event_off", price)) return;          // 이미 할인율 칸이 있음
+      var now = q(".event_now", price);
+      if (!now) return;                            // 가격(.event_now)이 있는 행에만
+      var off = document.createElement("span");
+      off.className = "event_off";
+      price.insertBefore(off, now);                // 가격 앞에 삽입(원본 마크업 순서와 동일)
+    });
+  }
+
   /* 가격 단위(万ウォン 등 <small>)는 편집 잠금 → 가격 숫자만 편집되게.
      contenteditable 부모 안의 contenteditable=false 자식은 편집 불가 섬이 됨.
      저장 스냅샷에서는 [contenteditable] 속성이 모두 제거되므로 라이브엔 영향 없음. */
@@ -977,7 +995,7 @@
     "event_note": "구성·설명 (비우면 표시되지 않습니다)",
     "sub": "상세 설명란 (비우면 표시되지 않습니다)",
     "proc-opt": "옵션 설명 (비우면 표시되지 않습니다)",
-    "event_off": "할인율 (비우면 표시되지 않습니다)",
+    "event_off": "할인율",
     "event_meta": "부가 정보 (비우면 표시되지 않습니다)"
   };
   function markOptionalFields() {
