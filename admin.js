@@ -15,6 +15,10 @@
 
   var AUTH_KEY = "lp_admin_authed";
 
+  /* 편집 UI 한국어/일본어 전환(admin-i18n.js). 미로드 시 원문 그대로 반환 */
+  function tr(s) { return window.LPI18n ? window.LPI18n.t(s) : s; }
+  function langLabel() { return window.LPI18n ? window.LPI18n.buttonLabel() : "日本語"; }
+
   function authed() { try { return localStorage.getItem(AUTH_KEY) === "1"; } catch (e) { return false; } }
   function setAuthed(v) { try { v ? localStorage.setItem(AUTH_KEY, "1") : localStorage.removeItem(AUTH_KEY); } catch (e) {} }
 
@@ -30,10 +34,10 @@
     gate.className = "admin-gate";
     gate.innerHTML =
       "<div class='admin-gate-box'>" +
-      "<h2>관리자 로그인</h2>" +
-      "<p>비밀번호를 입력하세요</p>" +
-      "<input type='password' id='admin-pw' placeholder='비밀번호' autocomplete='current-password'>" +
-      "<button id='admin-login'>로그인</button>" +
+      "<h2>" + tr("관리자 로그인") + "</h2>" +
+      "<p>" + tr("비밀번호를 입력하세요") + "</p>" +
+      "<input type='password' id='admin-pw' placeholder='" + tr("비밀번호") + "' autocomplete='current-password'>" +
+      "<button id='admin-login'>" + tr("로그인") + "</button>" +
       "<p class='admin-err' id='admin-err'></p>" +
       "</div>";
     document.body.appendChild(gate);
@@ -47,7 +51,7 @@
         document.body.classList.remove("admin-locked");
         enterAdmin();
       } else {
-        err.textContent = "비밀번호가 올바르지 않습니다";
+        err.textContent = tr("비밀번호가 올바르지 않습니다");
         pw.value = ""; pw.focus();
       }
     }
@@ -70,11 +74,15 @@
     var bar = document.createElement("div");
     bar.className = "admin-bar";
     bar.innerHTML =
-      "<span>🔑 관리자 모드</span><span class='admin-bar-sp'></span>" +
-      "<span class='admin-hint'>각 페이지의 '편집'에서 내용을 변경할 수 있습니다</span>" +
-      "<a class='admin-link' href='./reservations.html'>📋 예약 명단</a>" +
-      "<button id='admin-logout'>로그아웃</button>";
+      "<span>" + tr("🔑 관리자 모드") + "</span><span class='admin-bar-sp'></span>" +
+      "<span class='admin-hint'>" + tr("각 페이지의 '편집'에서 내용을 변경할 수 있습니다") + "</span>" +
+      "<button id='admin-lang' class='admin-lang'>🌐 " + langLabel() + "</button>" +
+      "<a class='admin-link' href='./reservations.html'>" + tr("📋 예약 명단") + "</a>" +
+      "<button id='admin-logout'>" + tr("로그아웃") + "</button>";
     document.body.insertBefore(bar, document.body.firstChild);
+    bar.querySelector("#admin-lang").addEventListener("click", function () {
+      if (window.LPI18n) window.LPI18n.toggle();
+    });
     bar.querySelector("#admin-logout").addEventListener("click", function () {
       setAuthed(false);
       location.reload();
@@ -93,7 +101,7 @@
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "admin-edit-btn";
-      btn.textContent = "✏️ 페이지 편집";
+      btn.textContent = tr("✏️ 페이지 편집");
       btn.addEventListener("click", function (e) {
         e.preventDefault(); e.stopPropagation();
         var url = href + (href.indexOf("?") === -1 ? "?" : "&") + "admin=1";
@@ -116,7 +124,7 @@
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "admin-thumb-btn";
-      btn.textContent = "🖼️ 썸네일 변경";
+      btn.textContent = tr("🖼️ 썸네일 변경");
       btn.addEventListener("click", function (e) {
         e.preventDefault(); e.stopPropagation();
         pickImage(function (dataUrl) {
@@ -127,8 +135,8 @@
           if (!data[key]) data[key] = {};
           data[key].thumb = dataUrl;
           var ok = window.LPGallery.save(data);
-          toast(ok ? "✅ 썸네일을 변경했습니다 (이 브라우저에 저장됨)"
-                   : "⚠️ 저장 실패 (용량 초과 가능성)");
+          toast(ok ? tr("✅ 썸네일을 변경했습니다 (이 브라우저에 저장됨)")
+                   : tr("⚠️ 저장 실패 (용량 초과 가능성)"));
         });
       });
       thumb.appendChild(btn);

@@ -9,6 +9,9 @@
   var ADMIN_PASSWORD = "admin1234";   // admin.js と同じパスワード
   var AUTH_KEY = "lp_admin_authed";
 
+  /* 편집 UI 한국어/일본어 전환(admin-i18n.js). 미로드 시 원문 그대로 반환 */
+  function tr(s) { return window.LPI18n ? window.LPI18n.t(s) : s; }
+
   function authed() { try { return localStorage.getItem(AUTH_KEY) === "1"; } catch (e) { return false; } }
   function setAuthed(v) { try { v ? localStorage.setItem(AUTH_KEY, "1") : localStorage.removeItem(AUTH_KEY); } catch (e) {} }
 
@@ -22,27 +25,39 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    if (window.LPI18n) window.LPI18n.applyStatic();   // 정적 한국어 → 선택 언어로 교체
+    setupLangButton();
     if (authed()) { enter(); } else { showGate(); }
     document.getElementById("rv-logout").addEventListener("click", function () {
       setAuthed(false); location.href = "./admin.html";
     });
   });
 
+  /* 언어 전환 버튼(🌐) : 현재 언어에 맞는 라벨 표시 + 클릭 시 전환 */
+  function setupLangButton() {
+    var btn = document.getElementById("rv-lang");
+    if (!btn) return;
+    btn.textContent = "🌐 " + (window.LPI18n ? window.LPI18n.buttonLabel() : "日本語");
+    btn.addEventListener("click", function () {
+      if (window.LPI18n) window.LPI18n.toggle();
+    });
+  }
+
   /* ---- ログインゲート ---- */
   function showGate() {
     var gate = document.createElement("div");
     gate.className = "rv-gate";
     gate.innerHTML =
-      "<div class='rv-gate-box'><h2>예약 명단 로그인</h2><p>비밀번호를 입력하세요</p>" +
-      "<input type='password' id='rv-pw' placeholder='비밀번호'>" +
-      "<button id='rv-login'>로그인</button>" +
+      "<div class='rv-gate-box'><h2>" + tr("예약 명단 로그인") + "</h2><p>" + tr("비밀번호를 입력하세요") + "</p>" +
+      "<input type='password' id='rv-pw' placeholder='" + tr("비밀번호") + "'>" +
+      "<button id='rv-login'>" + tr("로그인") + "</button>" +
       "<p class='rv-gate-err' id='rv-pw-err'></p></div>";
     document.body.appendChild(gate);
     var pw = gate.querySelector("#rv-pw");
     var err = gate.querySelector("#rv-pw-err");
     function tryLogin() {
       if (pw.value === ADMIN_PASSWORD) { setAuthed(true); gate.remove(); enter(); }
-      else { err.textContent = "비밀번호가 올바르지 않습니다"; pw.value = ""; pw.focus(); }
+      else { err.textContent = tr("비밀번호가 올바르지 않습니다"); pw.value = ""; pw.focus(); }
     }
     gate.querySelector("#rv-login").addEventListener("click", tryLogin);
     pw.addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
@@ -68,7 +83,7 @@
     document.getElementById("rv-status").addEventListener("change", render);
     document.getElementById("rv-csv").addEventListener("click", downloadCsv);
     document.getElementById("rv-clear").addEventListener("click", function () {
-      if (!confirm("모든 예약·쿠폰 데이터를 삭제합니다. 계속하시겠습니까?")) return;
+      if (!confirm(tr("모든 예약·쿠폰 데이터를 삭제합니다. 계속하시겠습니까?"))) return;
       try {
         localStorage.removeItem("lp_reservations_v1");
         localStorage.removeItem("lp_coupons_v1");
@@ -127,7 +142,7 @@
     } else {
       // 통화완료 → 미연락:クーポンを使用前に戻す
       if (r.couponCode && r.couponConfirmed &&
-          !confirm("통화완료를 취소하면 이 예약의 쿠폰 사용도 취소되어 다시 사용 가능 상태로 돌아갑니다. 계속하시겠습니까?")) {
+          !confirm(tr("통화완료를 취소하면 이 예약의 쿠폰 사용도 취소되어 다시 사용 가능 상태로 돌아갑니다. 계속하시겠습니까?"))) {
         return;
       }
       var patch2 = { contactStatus: "미연락", contactedAt: "" };
@@ -188,7 +203,7 @@
     getCoupons().forEach(function (c) { var n = couponHospName(c); if (n) names[n] = true; });
     var keys = Object.keys(names).sort();
     var cur = sel.value;
-    sel.innerHTML = "<option value=''>전체 병원</option>" +
+    sel.innerHTML = "<option value=''>" + tr("전체 병원") + "</option>" +
       keys.map(function (n) { return "<option value='" + esc(n) + "'>" + esc(n) + "</option>"; }).join("");
     sel.value = cur;   // 갱신 후 선택값 유지
   }
@@ -206,11 +221,11 @@
     var confirmed = resv.filter(function (r) { return r.couponConfirmed; }).length;
     var box = document.getElementById("rv-stats");
     box.innerHTML =
-      stat(resv.length, "예약 합계") +
-      stat(noContact, "미연락") +
-      stat(pending, "쿠폰 사용 예정") +
-      stat(confirmed, "쿠폰 사용 확정") +
-      stat(coupons.length, "쿠폰 발급");
+      stat(resv.length, tr("예약 합계")) +
+      stat(noContact, tr("미연락")) +
+      stat(pending, tr("쿠폰 사용 예정")) +
+      stat(confirmed, tr("쿠폰 사용 확정")) +
+      stat(coupons.length, tr("쿠폰 발급"));
   }
   function stat(n, l) { return "<div class='rv-stat'><div class='n'>" + n + "</div><div class='l'>" + l + "</div></div>"; }
 
@@ -223,9 +238,9 @@
       return true;
     });
     var wrap = document.getElementById("rv-table");
-    if (!rows.length) { wrap.innerHTML = "<div class='rv-empty'>예약 데이터가 없습니다.</div>"; return; }
+    if (!rows.length) { wrap.innerHTML = "<div class='rv-empty'>" + tr("예약 데이터가 없습니다.") + "</div>"; return; }
     var html = "<table><thead><tr>" +
-      "<th class='col-date'>일시</th><th>이름</th><th>전화번호</th><th>이용 병원</th><th class='col-contact'>연락 상태</th><th class='col-coupon'>쿠폰</th><th class='col-code'>코드</th>" +
+      "<th class='col-date'>" + tr("일시") + "</th><th>" + tr("이름") + "</th><th>" + tr("전화번호") + "</th><th>" + tr("이용 병원") + "</th><th class='col-contact'>" + tr("연락 상태") + "</th><th class='col-coupon'>" + tr("쿠폰") + "</th><th class='col-code'>" + tr("코드") + "</th>" +
       "</tr></thead><tbody>";
     rows.forEach(function (r) {
       html += "<tr>" +
@@ -247,16 +262,16 @@
     var done = r.contactStatus === "통화완료";
     return "<span class='cstat-wrap'>" +
              "<button class='cstat" + (done ? " done" : "") + "' data-id='" + esc(r.id) + "'>" +
-               (done ? "✓ 통화완료" : "미연락") + "</button>" +
+               (done ? tr("✓ 통화완료") : tr("미연락")) + "</button>" +
              (done && r.contactedAt ? "<span class='cstat-at'>" + esc(fmtDate(r.contactedAt)) + "</span>" : "") +
            "</span>";
   }
 
   /* クーポン セル(사용 안함 / 사용 예정 / 사용 확정) */
   function couponCell(r) {
-    if (!r.couponCode) return "<span class='pill no'>사용 안함</span>";
-    if (r.couponConfirmed) return "<span class='pill use'>5%OFF 사용</span>";
-    return "<span class='pill pending'>사용 예정</span>";
+    if (!r.couponCode) return "<span class='pill no'>" + tr("사용 안함") + "</span>";
+    if (r.couponConfirmed) return "<span class='pill use'>" + tr("5%OFF 사용") + "</span>";
+    return "<span class='pill pending'>" + tr("사용 예정") + "</span>";
   }
 
   function renderCoupons() {
@@ -267,17 +282,17 @@
       return true;
     });
     var wrap = document.getElementById("rv-table");
-    if (!rows.length) { wrap.innerHTML = "<div class='rv-empty'>쿠폰 발급 데이터가 없습니다.</div>"; return; }
+    if (!rows.length) { wrap.innerHTML = "<div class='rv-empty'>" + tr("쿠폰 발급 데이터가 없습니다.") + "</div>"; return; }
     var html = "<table><thead><tr>" +
-      "<th>코드</th><th>발급 전화번호</th><th>상태</th><th>발급 일시</th><th>사용 일시</th><th>사용 병원</th>" +
+      "<th>" + tr("코드") + "</th><th>" + tr("발급 전화번호") + "</th><th>" + tr("상태") + "</th><th>" + tr("발급 일시") + "</th><th>" + tr("사용 일시") + "</th><th>" + tr("사용 병원") + "</th>" +
       "</tr></thead><tbody>";
     rows.forEach(function (c) {
       html += "<tr>" +
         "<td><code class='code'>" + esc(c.code) + "</code></td>" +
         "<td>" + esc(c.phone) + "</td>" +
         "<td>" + (c.used
-            ? "<span class='pill use'>사용 완료</span>"
-            : "<span class='pill no'>미사용</span>") + "</td>" +
+            ? "<span class='pill use'>" + tr("사용 완료") + "</span>"
+            : "<span class='pill no'>" + tr("미사용") + "</span>") + "</td>" +
         "<td>" + esc(fmtDate(c.issuedAt)) + "</td>" +
         "<td>" + esc(fmtDate(c.usedAt)) + "</td>" +
         "<td>" + esc(c.hospital || "—") + "</td>" +
@@ -293,17 +308,17 @@
     var lines = [], name;
     if (currentTab === "resv") {
       name = "reservations.csv";
-      lines.push(["일시", "이름", "전화번호", "이용 병원", "연락 상태", "통화 일시", "쿠폰", "코드"].map(csvCell).join(","));
+      lines.push([tr("일시"), tr("이름"), tr("전화번호"), tr("이용 병원"), tr("연락 상태"), tr("통화 일시"), tr("쿠폰"), tr("코드")].map(csvCell).join(","));
       getResv().forEach(function (r) {
-        var couponLabel = !r.couponCode ? "안함" : (r.couponConfirmed ? "사용 확정" : "사용 예정");
+        var couponLabel = !r.couponCode ? tr("안함") : (r.couponConfirmed ? tr("사용 확정") : tr("사용 예정"));
         lines.push([fmtDate(r.createdAt), r.name, r.phone, r.hospitalName || r.hospital,
-          r.contactStatus || "미연락", fmtDate(r.contactedAt), couponLabel, r.couponCode || ""].map(csvCell).join(","));
+          tr(r.contactStatus || "미연락"), fmtDate(r.contactedAt), couponLabel, r.couponCode || ""].map(csvCell).join(","));
       });
     } else {
       name = "coupons.csv";
-      lines.push(["코드", "발급 전화번호", "상태", "발급 일시", "사용 일시", "사용 병원"].map(csvCell).join(","));
+      lines.push([tr("코드"), tr("발급 전화번호"), tr("상태"), tr("발급 일시"), tr("사용 일시"), tr("사용 병원")].map(csvCell).join(","));
       getCoupons().forEach(function (c) {
-        lines.push([c.code, c.phone, c.used ? "사용 완료" : "미사용",
+        lines.push([c.code, c.phone, c.used ? tr("사용 완료") : tr("미사용"),
           fmtDate(c.issuedAt), fmtDate(c.usedAt), c.hospital || ""].map(csvCell).join(","));
       });
     }

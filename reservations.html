@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>예약 명단 — JP Landing admin</title>
+    <title data-i18n="예약 명단 — JP Landing admin">예약 명단 — JP Landing admin</title>
     <style>
         :root {
             color-scheme: light;
@@ -369,40 +369,41 @@
 
 <body>
     <div class="rv-bar">
-        <b>📋 예약 명단</b>
+        <b data-i18n="📋 예약 명단">📋 예약 명단</b>
         <span class="sp"></span>
-        <a class="home" href="./admin.html">← 관리 메인</a>
-        <button id="rv-logout">로그아웃</button>
+        <button id="rv-lang">🌐 日本語</button>
+        <a class="home" href="./admin.html" data-i18n="← 관리 메인">← 관리 메인</a>
+        <button id="rv-logout" data-i18n="로그아웃">로그아웃</button>
     </div>
 
     <div class="rv-wrap" id="rv-app" hidden>
         <div class="rv-head">
-            <h1>LINE 예약 명단</h1>
+            <h1 data-i18n="LINE 예약 명단">LINE 예약 명단</h1>
         </div>
 
         <div class="rv-stats" id="rv-stats"></div>
 
         <div class="tab-sub">
-            <button data-tab="resv" class="on">예약 목록</button>
-            <button data-tab="coupon">쿠폰 발급 현황</button>
+            <button data-tab="resv" class="on" data-i18n="예약 목록">예약 목록</button>
+            <button data-tab="coupon" data-i18n="쿠폰 발급 현황">쿠폰 발급 현황</button>
         </div>
 
         <div class="rv-tools">
-            <input type="search" id="rv-search" placeholder="이름·전화·병원으로 검색">
+            <input type="search" id="rv-search" placeholder="이름·전화·병원으로 검색" data-i18n-ph="이름·전화·병원으로 검색">
             <select id="rv-hospital">
-                <option value="">전체 병원</option>
+                <option value="" data-i18n="전체 병원">전체 병원</option>
             </select>
             <select id="rv-status">
-                <option value="">연락 상태</option>
-                <option value="미연락">미연락</option>
-                <option value="통화완료">통화완료</option>
+                <option value="" data-i18n="연락 상태">연락 상태</option>
+                <option value="미연락" data-i18n="미연락">미연락</option>
+                <option value="통화완료" data-i18n="통화완료">통화완료</option>
             </select>
-            <button id="rv-csv">CSV 다운로드</button>
+            <button id="rv-csv" data-i18n="CSV 다운로드">CSV 다운로드</button>
             <span class="sp" style="flex:1"></span>
-            <button class="danger" id="rv-clear">전체 데이터 삭제</button>
+            <button class="danger" id="rv-clear" data-i18n="전체 데이터 삭제">전체 데이터 삭제</button>
         </div>
 
-        <div class="rv-note">
+        <div class="rv-note" data-i18n-html="rv-note-coupon">
             💡 <b>쿠폰은 LINE 연결 전까지 "사용 예정" 상태입니다.</b>
             손님이 폼에 쿠폰을 입력해도 바로 사용 처리되지 않습니다.<br>
             관리자가 LINE으로 연락·통화를 확인한 뒤 <b>"미연락" 버튼을 눌러 "✓ 통화완료"로 바꾸면</b>
@@ -412,8 +413,9 @@
         <div id="rv-table"></div>
     </div>
 
+    <script src="./admin-i18n.js?v=1"></script>
     <script src="./coupon.js"></script>
-    <script src="./reservations.js"></script>
+    <script src="./reservations.js?v=2"></script>
 </body>
 
 </html>

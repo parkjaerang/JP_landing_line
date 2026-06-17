@@ -13,6 +13,11 @@
   var AUTH_KEY = "lp_admin_authed";
   var OVERRIDE_PREFIX = "lp_override_v1::";
 
+  /* 편집 UI 한국어/일본어 전환(admin-i18n.js). 미로드 시 원문 그대로 반환.
+     ※ 지역 변수명 't'가 일부 함수에서 쓰이므로 번역 함수는 'tr'로 둔다. */
+  function tr(s) { return window.LPI18n ? window.LPI18n.t(s) : s; }
+  function langLabel() { return window.LPI18n ? window.LPI18n.buttonLabel() : "日本語"; }
+
   /* ---- 페이지 키(예: wooa_LP) ---- */
   function getPageKey() {
     var parts = location.pathname.split("/").filter(Boolean);
@@ -150,7 +155,7 @@
     buildShortsEditor();
     bindMapControl();
     tameMotion();
-    toast("편집 모드 : 클릭해서 직접 편집할 수 있습니다");
+    toast(tr("편집 모드 : 클릭해서 직접 편집할 수 있습니다"));
   }
 
   /* =========================================================
@@ -197,7 +202,7 @@
       "html.lp-admin .prog_pkg.lp-item{padding-top:38px}" +
       /* 프로그램 카드 삭제 버튼: 둥근 × 원형 → 「× 삭제」 알약형 버튼(카테고리 삭제 버튼과 동일한 모양) */
       "html.lp-admin .prog_pkg.lp-item > .lp-del{top:8px;right:8px;width:auto;height:auto;border-radius:7px;padding:6px 10px;font-size:0;font-weight:700;font-family:system-ui,sans-serif;white-space:nowrap}" +
-      "html.lp-admin .prog_pkg.lp-item > .lp-del::before{content:'× 삭제';font-size:12px;line-height:1}" +
+      "html.lp-admin .prog_pkg.lp-item > .lp-del::before{content:'" + tr("× 삭제") + "';font-size:12px;line-height:1}" +
       /* 프로그램 카드(.price_prog/.menu_cat) 통째 삭제 버튼 + 펼침/접힘 토글: 카드 우상단 */
       "html.lp-admin .price_prog,html.lp-admin .menu_cat{position:relative}" +
       "html.lp-admin .price_prog > .prog_title,html.lp-admin .menu_cat > .menu_cat_title{padding-right:104px}" +
@@ -215,7 +220,7 @@
       "html.lp-admin #signature .sig_track{scroll-snap-type:none}" +
       "html.lp-admin #signature .sig_track::after{flex-basis:16px;min-width:16px}" +
       "html.lp-admin .lp-img{position:relative;cursor:pointer}" +
-      "html.lp-admin .lp-img::after{content:'📷 이미지 변경';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:5px 9px;border-radius:6px;pointer-events:none;opacity:0;transition:.15s;white-space:nowrap}" +
+      "html.lp-admin .lp-img::after{content:'" + tr("📷 이미지 변경") + "';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:5px 9px;border-radius:6px;pointer-events:none;opacity:0;transition:.15s;white-space:nowrap}" +
       "html.lp-admin .lp-img:hover::after{opacity:1}" +
       /* 새로 추가한 항목의 빈 이미지: 사진 숨기고 'B/A 이미지' 등 placeholder 박스 표시(클릭하면 이미지 변경) */
       "html.lp-admin .lp-img-empty{min-height:120px;background:#f0f2f5;border:1.5px dashed #b9c0cc;display:flex;align-items:center;justify-content:center}" +
@@ -249,18 +254,20 @@
     bar.className = "lp-toolbar";
     bar.setAttribute("data-lp-ec", "1");
     bar.innerHTML =
-      "<span class='lp-title'>✏️ 편집 모드</span><span class='lp-key'>" + PAGE_KEY + "</span>" +
+      "<span class='lp-title'>" + tr("✏️ 편집 모드") + "</span><span class='lp-key'>" + PAGE_KEY + "</span>" +
       "<span class='lp-sp'></span>" +
-      "<button class='ghost' data-act='preview'>미리보기</button>" +
-      "<button class='warn' data-act='reset'>변경 취소</button>" +
-      "<button data-act='save'>저장</button>" +
-      "<button class='ghost' data-act='exit'>종료</button>";
+      "<button class='ghost' data-act='lang'>🌐 " + langLabel() + "</button>" +
+      "<button class='ghost' data-act='preview'>" + tr("미리보기") + "</button>" +
+      "<button class='warn' data-act='reset'>" + tr("변경 취소") + "</button>" +
+      "<button data-act='save'>" + tr("저장") + "</button>" +
+      "<button class='ghost' data-act='exit'>" + tr("종료") + "</button>";
     document.body.appendChild(bar);
     bar.addEventListener("click", function (e) {
       var b = e.target.closest("button");
       if (!b) return;
       var act = b.getAttribute("data-act");
-      if (act === "save") doSave();
+      if (act === "lang") { if (window.LPI18n) window.LPI18n.toggle(); }
+      else if (act === "save") doSave();
       else if (act === "reset") doReset();
       else if (act === "preview") window.open(location.pathname, "_blank");
       else if (act === "exit") {
@@ -443,13 +450,13 @@
         cat.setAttribute("data-lp-grpbtn", "1");
         var add = document.createElement("button");
         add.className = "lp-add lp-grpadd"; add.type = "button";
-        add.textContent = "＋ 항목 추가";
+        add.textContent = tr("＋ 항목 추가");
         add.setAttribute("data-lp-ec", "1");
         add.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
           var sub = document.createElement("p");
           sub.className = def.sub;
-          sub.setAttribute("data-ph", "부제목 (비우면 표시되지 않습니다)");
+          sub.setAttribute("data-ph", tr("부제목 (비우면 표시되지 않습니다)"));
           var ul = document.createElement("ul");
           ul.className = def.list;
           ul.innerHTML =
@@ -460,7 +467,7 @@
           cat.insertBefore(ul, anchor);
           blankItem(ul); // 템플릿 텍스트(시술이름/00万ウォン) → placeholder 힌트
           refreshEditables();
-          toast("항목을 추가했습니다");
+          toast(tr("항목을 추가했습니다"));
         });
         cat.appendChild(add);
       });
@@ -479,7 +486,7 @@
         wrap.setAttribute("data-lp-catbtn", "1");
         var add = document.createElement("button");
         add.className = "lp-add lp-catadd"; add.type = "button";
-        add.textContent = "＋ 카테고리 추가";
+        add.textContent = tr("＋ 카테고리 추가");
         add.setAttribute("data-lp-ec", "1");
         add.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
@@ -487,7 +494,7 @@
           card.className = def.cat;
           card.innerHTML =
             '<h3 class="' + def.title + '">카테고리명</h3>' +
-            '<p class="' + def.sub + '" data-ph="부제목 (비우면 표시되지 않습니다)"></p>' +
+            '<p class="' + def.sub + '" data-ph="' + tr("부제목 (비우면 표시되지 않습니다)") + '"></p>' +
             '<ul class="' + def.list + '">' +
             '<li class="event_item"><span class="event_name">시술이름</span>' +
             '<span class="event_price">00<small>万ウォン</small></span></li>' +
@@ -495,7 +502,7 @@
           wrap.insertBefore(card, add);
           blankItem(card);                  // 템플릿 텍스트(카테고리명/시술이름 등) → placeholder 힌트
           refreshEditables();
-          toast("카테고리를 추가했습니다");
+          toast(tr("카테고리를 추가했습니다"));
         });
         wrap.appendChild(add);
       });
@@ -511,12 +518,12 @@
         if (card.getAttribute("data-lp-catdel") === "1") return;
         card.setAttribute("data-lp-catdel", "1");
         var del = document.createElement("button");
-        del.className = "lp-catdel"; del.type = "button"; del.textContent = "× 삭제";
+        del.className = "lp-catdel"; del.type = "button"; del.textContent = tr("× 삭제");
         del.setAttribute("data-lp-ec", "1");
-        del.title = "이 카테고리(카드) 전체 삭제";
+        del.title = tr("이 카테고리(카드) 전체 삭제");
         del.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
-          if (confirm("이 카테고리(카드)를 통째로 삭제할까요?")) { card.remove(); toast("카테고리를 삭제했습니다"); }
+          if (confirm(tr("이 카테고리(카드)를 통째로 삭제할까요?"))) { card.remove(); toast(tr("카테고리를 삭제했습니다")); }
         });
         card.appendChild(del);
       });
@@ -539,10 +546,10 @@
           del.className = "lp-del lp-grpdel-btn"; del.type = "button"; del.textContent = "×";
           del.setAttribute("contenteditable", "false");
           del.setAttribute("data-lp-ec", "1");
-          del.title = "이 그룹(소제목+항목) 삭제";
+          del.title = tr("이 그룹(소제목+항목) 삭제");
           del.addEventListener("click", function (e) {
             e.preventDefault(); e.stopPropagation();
-            if (!confirm("이 그룹(소제목과 항목들)을 삭제할까요?")) return;
+            if (!confirm(tr("이 그룹(소제목과 항목들)을 삭제할까요?"))) return;
             // 소제목 바로 뒤의 해당 리스트(.prog_items/.menu_list)를 찾아 함께 제거
             var n = sub.nextElementSibling, list = null;
             while (n) {
@@ -552,7 +559,7 @@
             }
             if (list) list.remove();
             sub.remove();
-            toast("그룹을 삭제했습니다");
+            toast(tr("그룹을 삭제했습니다"));
           });
           sub.appendChild(del);
         });
@@ -592,7 +599,7 @@
         box.setAttribute("data-lp-giadd", "1");
         var add = document.createElement("button");
         add.className = "lp-add lp-giadd"; add.type = "button";
-        add.textContent = "＋ 시술 추가";
+        add.textContent = tr("＋ 시술 추가");
         add.setAttribute("data-lp-ec", "1");
         add.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
@@ -609,7 +616,7 @@
           grid.insertBefore(clone, add);                      // 그룹의 ＋시술추가 버튼 바로 앞 = 그룹 끝
           blankItem(clone);
           refreshEditables();
-          toast("시술을 추가했습니다");
+          toast(tr("시술을 추가했습니다"));
         });
         grid.insertBefore(add, groupEndAnchor(box));          // 그룹 끝(다음 헤더/＋그룹추가 앞)에 배치
       });
@@ -628,7 +635,7 @@
       grid.setAttribute("data-lp-hlbtn", "1");
       var add = document.createElement("button");
       add.className = "lp-add lp-hladd"; add.type = "button";
-      add.textContent = "＋ 그룹 추가";
+      add.textContent = tr("＋ 그룹 추가");
       add.setAttribute("data-lp-ec", "1");
       add.addEventListener("click", function (e) {
         e.preventDefault(); e.stopPropagation();
@@ -640,7 +647,7 @@
           blankItem(n);                                       // 템플릿 텍스트 → placeholder 힌트
         });
         refreshEditables();
-        toast("그룹을 추가했습니다");
+        toast(tr("그룹을 추가했습니다"));
       });
       grid.appendChild(add);
     });
@@ -659,10 +666,10 @@
       del.className = "lp-del lp-hldel-btn"; del.type = "button"; del.textContent = "×";
       del.setAttribute("contenteditable", "false");
       del.setAttribute("data-lp-ec", "1");
-      del.title = "이 그룹(제목+속한 시술) 삭제";
+      del.title = tr("이 그룹(제목+속한 시술) 삭제");
       del.addEventListener("click", function (e) {
         e.preventDefault(); e.stopPropagation();
-        if (!confirm("이 그룹(제목과 속한 시술들)을 삭제할까요?")) return;
+        if (!confirm(tr("이 그룹(제목과 속한 시술들)을 삭제할까요?"))) return;
         var rm = [], n = box.nextElementSibling;
         while (n) {
           if (n.classList.contains("highlight-box")) break;   // 다음 그룹 시작 → 중단
@@ -672,7 +679,7 @@
         }
         rm.forEach(function (x) { x.remove(); });
         box.remove();
-        toast("그룹을 삭제했습니다");
+        toast(tr("그룹을 삭제했습니다"));
       });
       box.appendChild(del);
     });
@@ -699,8 +706,8 @@
         btn.className = "lp-acc-toggle"; btn.type = "button";
         btn.setAttribute("contenteditable", "false");
         btn.setAttribute("data-lp-ec", "1");
-        btn.setAttribute("aria-label", "펼치기 / 접기");
-        btn.title = "펼치기 / 접기";
+        btn.setAttribute("aria-label", tr("펼치기 / 접기"));
+        btn.title = tr("펼치기 / 접기");
         btn.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
           card.classList.toggle("lp-collapsed");
@@ -724,7 +731,7 @@
         if (prev && prev.classList.contains(def.sub)) return; // 이미 소제목이 있으면 스킵
         var sub = document.createElement("p");
         sub.className = def.sub;
-        sub.setAttribute("data-ph", "부제목 (비우면 표시되지 않습니다)");
+        sub.setAttribute("data-ph", tr("부제목 (비우면 표시되지 않습니다)"));
         sub.setAttribute("data-lp-autosub", "1");            // 자동 삽입 입력칸(그룹 삭제 × 제외 대상)
         sub.setAttribute("contenteditable", "true");         // 버튼 없이 바로 입력
         sub.setAttribute("spellcheck", "false");
@@ -748,7 +755,7 @@
       sub.className = "sub";
       sub.setAttribute("contenteditable", "true");
       sub.setAttribute("spellcheck", "false");
-      sub.setAttribute("data-ph", "상세 설명란 (비우면 표시되지 않습니다)");
+      sub.setAttribute("data-ph", tr("상세 설명란 (비우면 표시되지 않습니다)"));
       var name = q(".event_name", item);
       if (name) item.insertBefore(sub, name.nextSibling);
       else item.insertBefore(sub, item.firstChild);
@@ -783,7 +790,7 @@
       numSpan.className = "lp-num";
       numSpan.setAttribute("contenteditable", "true");
       numSpan.setAttribute("spellcheck", "false");
-      numSpan.setAttribute("data-ph", "가격");
+      numSpan.setAttribute("data-ph", tr("가격"));
       numSpan.textContent = num;
       el.appendChild(numSpan);
       var u = document.createElement(small ? "small" : "span");
@@ -827,7 +834,7 @@
       var f = inp.files && inp.files[0];
       if (f) {
         var r = new FileReader();
-        r.onload = function () { cb(r.result); toast("이미지를 변경했습니다"); };
+        r.onload = function () { cb(r.result); toast(tr("이미지를 변경했습니다")); };
         r.readAsDataURL(f);
       }
       inp.remove();
@@ -852,10 +859,10 @@
         del.className = "lp-del"; del.type = "button"; del.textContent = "×";
         del.setAttribute("contenteditable", "false");   // 편집 가능한 항목(li 등) 안에서도 편집 대상에서 제외
         del.setAttribute("data-lp-ec", "1");
-        del.title = "이 항목 삭제";
+        del.title = tr("이 항목 삭제");
         del.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
-          if (confirm("이 항목을 삭제할까요?")) { var p = item.parentElement; item.remove(); renumberSignature(); toast("삭제했습니다"); }
+          if (confirm(tr("이 항목을 삭제할까요?"))) { var p = item.parentElement; item.remove(); renumberSignature(); toast(tr("삭제했습니다")); }
         });
         item.appendChild(del);
       });
@@ -882,7 +889,7 @@
         }
         var add = document.createElement("button");
         add.className = "lp-add"; add.type = "button";
-        add.textContent = def.addLabel || "＋ 시술 추가";
+        add.textContent = def.addLabel ? tr(def.addLabel) : tr("＋ 시술 추가");
         add.setAttribute("data-lp-ec", "1");
         add.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
@@ -901,7 +908,7 @@
           cont.insertBefore(clone, firstAddBtn(cont) || add);   // 추가버튼 묶음 위에 삽입
           blankItem(clone);                 // 기존 텍스트 제거 + placeholder 힌트(삽입 후)
           refreshEditables();
-          toast("항목을 추가했습니다");
+          toast(tr("항목을 추가했습니다"));
         });
         cont.appendChild(add);
       });
@@ -978,7 +985,7 @@
     if (!ev) return;
     Object.keys(OPT_PH).forEach(function (cls) {
       qa("." + cls, ev).forEach(function (el) {
-        el.setAttribute("data-ph", OPT_PH[cls]);   // 빈 상태에서만 표시(:empty::before)
+        el.setAttribute("data-ph", tr(OPT_PH[cls]));   // 빈 상태에서만 표시(:empty::before)
       });
     });
   }
@@ -996,7 +1003,7 @@
         qa(pair[0], root).forEach(function (el) {
           if (el.getAttribute("contenteditable") !== "true") return;
           if (q(".lp-num", el)) return;              // 가격 컨테이너는 .lp-num이 별도 처리
-          el.setAttribute("data-ph", pair[1]);
+          el.setAttribute("data-ph", tr(pair[1]));
         });
       });
     });
@@ -1024,7 +1031,7 @@
       });
     if (el.children.length && !onlySepSpans) return; // 다른 구조 요소가 있으면 비우지 않음(래퍼 보호)
     el.textContent = "";
-    if (ph) el.setAttribute("data-ph", ph);
+    if (ph) el.setAttribute("data-ph", tr(ph));
   }
 
   // 1x1 투명 이미지(빈 이미지의 src 자리채움 → 깨진 이미지 아이콘 방지)
@@ -1038,7 +1045,7 @@
       img.removeAttribute("srcset");
       img.setAttribute("src", BLANK_IMG);
       holder.classList.add("lp-img-empty");
-      holder.setAttribute("data-imgph", (holder.closest && holder.closest("#BA")) ? "B/A 이미지" : "이미지");
+      holder.setAttribute("data-imgph", (holder.closest && holder.closest("#BA")) ? tr("B/A 이미지") : tr("이미지"));
     });
   }
 
@@ -1130,13 +1137,13 @@
       firstCat.id = newCat;
       firstCat.classList.add("is-active");
       var title = q(".proc-cat-title", firstCat);
-      if (title) title.textContent = "새 카테고리";
+      if (title) title.textContent = tr("새 카테고리");
       trimCards(firstCat);
       var s0 = subsWrap ? directChildren(subsWrap, ".subtab")[0] : null;
       if (s0) {
         s0.setAttribute("data-target", newCat);
         s0.classList.add("is-active");
-        setTabLabel(s0, "새 카테고리");
+        setTabLabel(s0, tr("새 카테고리"));
       }
     } else {
       trimCards(panel);
@@ -1154,7 +1161,7 @@
     cleanClone(t);
     t.classList.remove("is-active");
     t.setAttribute("data-target", "#" + newPanelId);
-    setTabLabel(t, "새 탭");
+    setTabLabel(t, tr("새 탭"));
 
     if (srcPanel) {
       var p = srcPanel.cloneNode(true);
@@ -1168,15 +1175,15 @@
     group.insertBefore(t, q(".lp-tabadd", group));
     refreshEditables();
     switchTab(t);
-    toast("탭을 추가했습니다");
+    toast(tr("탭을 추가했습니다"));
   }
 
   function deleteTab(tab) {
     var group = tab.closest(".tabs");
     if (!group) return;
     var isLast = directChildren(group, ".tab").length <= 1;
-    if (!confirm(isLast ? "이 탭을 삭제하면 상위탭이 없어집니다(내용은 평면으로 복원). 삭제할까요?"
-                        : "이 탭과 그 내용을 모두 삭제할까요?")) return;
+    if (!confirm(isLast ? tr("이 탭을 삭제하면 상위탭이 없어집니다(내용은 평면으로 복원). 삭제할까요?")
+                        : tr("이 탭과 그 내용을 모두 삭제할까요?"))) return;
     var sel = tab.getAttribute("data-target");
     var panel = sel ? q(sel) : null;
     var wasActive = tab.classList.contains("is-active");
@@ -1192,7 +1199,7 @@
       }
       group.remove();
       refreshEditables();
-      toast("탭을 삭제했습니다");
+      toast(tr("탭을 삭제했습니다"));
       return;
     }
 
@@ -1201,7 +1208,7 @@
       var first = directChildren(group, ".tab")[0];
       if (first) switchTab(first);
     }
-    toast("탭을 삭제했습니다");
+    toast(tr("탭을 삭제했습니다"));
   }
 
   function addSubtab(wrap) {
@@ -1217,7 +1224,7 @@
     cleanClone(s);
     s.classList.remove("is-active");
     s.setAttribute("data-target", newCat);
-    setTabLabel(s, "새 카테고리");
+    setTabLabel(s, tr("새 카테고리"));
 
     if (srcCat) {
       var c = srcCat.cloneNode(true);
@@ -1225,7 +1232,7 @@
       c.classList.remove("is-active");
       c.id = newCat;
       var title = q(".proc-cat-title", c);
-      if (title) title.textContent = "새 카테고리";
+      if (title) title.textContent = tr("새 카테고리");
       trimCards(c);
       blankItem(c);                         // 복제된 카드의 기존 텍스트 → placeholder 힌트
       srcCat.parentElement.appendChild(c);
@@ -1233,15 +1240,15 @@
     wrap.insertBefore(s, q(".lp-subadd", wrap));
     refreshEditables();
     switchSub(s);
-    toast("카테고리를 추가했습니다");
+    toast(tr("카테고리를 추가했습니다"));
   }
 
   function deleteSubtab(sub) {
     var wrap = sub.closest(".subtabs");
     if (!wrap) return;
     var isLast = directChildren(wrap, ".subtab").length <= 1;
-    if (!confirm(isLast ? "이 카테고리를 삭제하면 하위탭이 없어집니다(내용은 평면으로 복원). 삭제할까요?"
-                        : "이 카테고리와 그 내용을 삭제할까요?")) return;
+    if (!confirm(isLast ? tr("이 카테고리를 삭제하면 하위탭이 없어집니다(내용은 평면으로 복원). 삭제할까요?")
+                        : tr("이 카테고리와 그 내용을 삭제할까요?"))) return;
     var catId = sub.getAttribute("data-target");
     var cat = catId ? document.getElementById(catId) : null;
     var wasActive = sub.classList.contains("is-active");
@@ -1257,7 +1264,7 @@
       }
       wrap.remove();
       refreshEditables();
-      toast("카테고리를 삭제했습니다");
+      toast(tr("카테고리를 삭제했습니다"));
       return;
     }
 
@@ -1266,7 +1273,7 @@
       var first = directChildren(wrap, ".subtab")[0];
       if (first) switchSub(first);
     }
-    toast("카테고리를 삭제했습니다");
+    toast(tr("카테고리를 삭제했습니다"));
   }
 
   /* ---- 탭/서브탭이 아예 없는 섹션을 탭 구조로 '부트스트랩' ----
@@ -1295,7 +1302,7 @@
     tab.type = "button";
     tab.className = "tab is-active";
     tab.setAttribute("data-target", "#" + panelId);
-    tab.textContent = "새 탭";
+    tab.textContent = tr("새 탭");
     tabs.appendChild(tab);
 
     var panel = document.createElement("div");
@@ -1315,7 +1322,7 @@
     qa(".lp-tabboot", root).forEach(function (n) { n.remove(); });
     refreshEditables();
     switchTab(tab);
-    toast("상위탭을 만들었습니다");
+    toast(tr("상위탭을 만들었습니다"));
   }
 
   /* 서브탭 없는 패널의 평면 카드 묶음 → .subtabs + .proc-cat 으로 변환 */
@@ -1331,7 +1338,7 @@
     sub.type = "button";
     sub.className = "subtab is-active";
     sub.setAttribute("data-target", catId);
-    sub.textContent = "새 카테고리";
+    sub.textContent = tr("새 카테고리");
     subtabs.appendChild(sub);
 
     var cat = document.createElement("div");
@@ -1339,7 +1346,7 @@
     cat.id = catId;
     var ctitle = document.createElement("h3");
     ctitle.className = "proc-cat-title";
-    ctitle.textContent = "새 카테고리";
+    ctitle.textContent = tr("새 카테고리");
     cat.appendChild(ctitle);
     // .event_grid / .grid 는 자체 좌우 패딩이 있어 proc-cat 패딩과 겹침 → proc-cat 패딩 제거
     if (!grid.classList.contains("proc-cards")) {
@@ -1354,7 +1361,7 @@
     qa(".lp-subboot", panel).forEach(function (n) { n.remove(); });
     refreshEditables();
     switchSub(sub);
-    toast("하위탭을 만들었습니다");
+    toast(tr("하위탭을 만들었습니다"));
   }
 
   function bootBtn(cls, label, handler) {
@@ -1374,7 +1381,7 @@
     if (q(".lp-tabdel", el)) return;
     var b = document.createElement("button");
     b.className = "lp-tabdel"; b.type = "button"; b.textContent = "×";
-    b.title = "삭제";
+    b.title = tr("삭제");
     b.setAttribute("data-lp-ec", "1");
     b.setAttribute("contenteditable", "false");
     b.addEventListener("click", function (e) {
@@ -1390,7 +1397,7 @@
 
     // 탭이 하나도 없고 평면 카드 묶음이 있으면 → '상위탭 만들기' 버튼(요금제 제목 바로 아래)
     if (!q(".tabs", root) && flatGrid(root, true) && !q(".lp-tabboot", root)) {
-      var tb = bootBtn("lp-tabboot", "＋ 상위탭 만들기", function () {
+      var tb = bootBtn("lp-tabboot", tr("＋ 상위탭 만들기"), function () {
         createTabStructure(root);
       });
       var rootTitle = directChildren(root, ".section_title")[0];
@@ -1400,7 +1407,7 @@
     // 서브탭 없는 각 패널 → '하위탭 만들기' 버튼(패널 맨 위)
     qa(".panel", root).forEach(function (panel) {
       if (q(".subtabs", panel) || !flatGrid(panel, true) || q(".lp-subboot", panel)) return;
-      var btn = bootBtn("lp-subboot", "＋ 하위탭(카테고리) 만들기", function () {
+      var btn = bootBtn("lp-subboot", tr("＋ 하위탭(카테고리) 만들기"), function () {
         createSubtabStructure(panel);
       });
       panel.insertBefore(btn, panel.firstChild);
@@ -1411,7 +1418,7 @@
       if (!q(".lp-tabadd", group)) {
         var add = document.createElement("button");
         add.className = "lp-tabadd"; add.type = "button";
-        add.textContent = "＋ 탭 추가";
+        add.textContent = tr("＋ 탭 추가");
         add.setAttribute("data-lp-ec", "1");
         add.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
@@ -1425,7 +1432,7 @@
       if (!q(".lp-subadd", wrap)) {
         var add = document.createElement("button");
         add.className = "lp-subadd"; add.type = "button";
-        add.textContent = "＋ 카테고리 추가";
+        add.textContent = tr("＋ 카테고리 추가");
         add.setAttribute("data-lp-ec", "1");
         add.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
@@ -1465,12 +1472,11 @@
     if (!map || q(".lp-map-edit")) return;
     var btn = document.createElement("button");
     btn.className = "lp-map-edit"; btn.type = "button";
-    btn.textContent = "지도 변경 (주소 입력)";
+    btn.textContent = tr("지도 변경 (주소 입력)");
     btn.setAttribute("data-lp-ec", "1");
     btn.addEventListener("click", function () {
       var v = prompt(
-        "주소를 입력하면 지도에 자동으로 반영됩니다.\n" +
-        "(Google 지도 임베드 URL이나 <iframe>을 그대로 붙여넣어도 됩니다)",
+        tr("주소를 입력하면 지도에 자동으로 반영됩니다.\n(Google 지도 임베드 URL이나 <iframe>을 그대로 붙여넣어도 됩니다)"),
         ""
       );
       if (v == null) return;
@@ -1482,7 +1488,7 @@
       else if (/^https?:\/\//i.test(v)) src = v;   // URL 직접 입력
       else src = buildMapEmbed(v);                  // 주소 → 자동 임베드
       map.setAttribute("src", src);
-      toast("지도를 변경했습니다");
+      toast(tr("지도를 변경했습니다"));
     });
     map.parentElement.insertBefore(btn, map);
   }
@@ -1531,7 +1537,7 @@
 
     var add = document.createElement("button");
     add.className = "lp-add lp-sadd"; add.type = "button";
-    add.textContent = "＋ 유튜브 추가";
+    add.textContent = tr("＋ 유튜브 추가");
     add.setAttribute("data-lp-ec", "1");
     add.addEventListener("click", function (e) {
       e.preventDefault(); e.stopPropagation();
@@ -1541,7 +1547,7 @@
       var last = rows[rows.length - 1];
       var inp = last && q(".lp-sid", last);
       if (inp) inp.focus();
-      toast("쇼츠를 추가했습니다");
+      toast(tr("쇼츠를 추가했습니다"));
     });
     box.appendChild(add);
 
@@ -1555,19 +1561,19 @@
     row.className = "lp-srow"; row.setAttribute("data-lp-ec", "1");
     row.innerHTML =
       "<span class='lp-sn'></span>" +
-      "<input type='text' class='lp-sid' placeholder='유튜브 링크 주소 (예: https://youtu.be/xxxxxxxxxxx)' value='" + shortsUrl(it.id) + "'>" +
+      "<input type='text' class='lp-sid' placeholder='" + tr("유튜브 링크 주소 (예: https://youtu.be/xxxxxxxxxxx)") + "' value='" + shortsUrl(it.id) + "'>" +
       "<select class='lp-sratio'>" +
-      "<option value='9x16'" + (it.ratio !== "16x9" ? " selected" : "") + ">세로 9:16</option>" +
-      "<option value='16x9'" + (it.ratio === "16x9" ? " selected" : "") + ">가로 16:9</option>" +
+      "<option value='9x16'" + (it.ratio !== "16x9" ? " selected" : "") + ">" + tr("세로 9:16") + "</option>" +
+      "<option value='16x9'" + (it.ratio === "16x9" ? " selected" : "") + ">" + tr("가로 16:9") + "</option>" +
       "</select>" +
-      "<button type='button' class='lp-sdel' data-lp-ec='1' title='이 쇼츠 삭제'>×</button>";
+      "<button type='button' class='lp-sdel' data-lp-ec='1' title='" + tr("이 쇼츠 삭제") + "'>×</button>";
     var del = q(".lp-sdel", row);
     if (del) del.addEventListener("click", function (e) {
       e.preventDefault(); e.stopPropagation();
       var box = row.parentElement;
       row.remove();
       if (box) renumberShorts(box);
-      toast("쇼츠를 삭제했습니다");
+      toast(tr("쇼츠를 삭제했습니다"));
     });
     return row;
   }
@@ -1722,13 +1728,13 @@
     if (q(SHORTS_GRID)) ov.shorts = collectShorts();
     var ok = saveOverride(ov);
     OVERRIDE = ov;
-    toast(ok ? "✅ 저장했습니다 (이 브라우저에 저장됨)" : "⚠️ 저장 실패 (용량 초과 가능성)");
+    toast(ok ? tr("✅ 저장했습니다 (이 브라우저에 저장됨)") : tr("⚠️ 저장 실패 (용량 초과 가능성)"));
   }
 
   function doReset() {
-    if (!confirm("이 페이지의 변경을 모두 취소하고 초기 상태로 되돌릴까요?")) return;
+    if (!confirm(tr("이 페이지의 변경을 모두 취소하고 초기 상태로 되돌릴까요?"))) return;
     lsDel(OVERRIDE_PREFIX + PAGE_KEY);
-    toast("변경을 취소했습니다. 다시 불러옵니다…");
+    toast(tr("변경을 취소했습니다. 다시 불러옵니다…"));
     setTimeout(function () { location.reload(); }, 600);
   }
 
