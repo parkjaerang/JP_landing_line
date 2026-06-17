@@ -140,7 +140,15 @@ if (sigTrack) {
         }
     }, true);
 
-    start();
+    // 화면에 보이면 자동 슬라이드 시작
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries, obs) => {
+            if (entries.some((en) => en.isIntersecting)) { start(); obs.disconnect(); }
+        }, { threshold: 0.2 });
+        io.observe(sigTrack);
+    } else {
+        start();
+    }
 }
 
 /* ===== shorts: 탭 시 iframe 로드(facade) ===== */
@@ -246,7 +254,15 @@ function initCardSlider(track, cardSelector, { interval = 2500, gap = 16 } = {})
         }
     }, true);
 
-    start();
+    // 화면에 보이면 자동 슬라이드 시작
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries, obs) => {
+            if (entries.some((en) => en.isIntersecting)) { start(); obs.disconnect(); }
+        }, { threshold: 0.2 });
+        io.observe(track);
+    } else {
+        start();
+    }
 }
 
 document.querySelectorAll('.doctors_wrap').forEach((wrap) => {

@@ -12,24 +12,6 @@ document.querySelectorAll('.ba_img img').forEach((img) => {
     });
 });
 
-const LINE_URL = 'https://line.me/R/ti/p/@564izgje?ts=03051300&oat_content=url';
-
-document.querySelectorAll('.line_btn').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        lightboxImg.src = './img/lineQR.png';
-        lightboxImg.alt = 'LINE QRコード';
-        lightbox.classList.add('open', 'qr-mode');
-        document.body.style.overflow = 'hidden';
-    });
-});
-
-lightboxImg.addEventListener('click', () => {
-    if (lightbox.classList.contains('qr-mode')) {
-        window.open(LINE_URL, '_blank');
-    }
-});
-
 function closeLightbox() {
     lightbox.classList.remove('open', 'qr-mode');
     document.body.style.overflow = '';
@@ -154,7 +136,15 @@ function initCardSlider(track, cardSelector, { interval = 2500, gap = 16 } = {})
         }
     }, true);
 
-    start();
+    // 화면에 보이면 자동 슬라이드 시작
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries, obs) => {
+            if (entries.some((en) => en.isIntersecting)) { start(); obs.disconnect(); }
+        }, { threshold: 0.2 });
+        io.observe(track);
+    } else {
+        start();
+    }
 }
 
 initCardSlider(document.querySelector('.sig_track'), '.sig_card', { interval: 2500 });
