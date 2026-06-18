@@ -148,6 +148,7 @@
     document.documentElement.classList.add("lp-admin");
     injectEditorStyle();
     buildToolbar();
+    bindSaveShortcut();
     bindAnchorGuard();
     bindEmptyPlaceholderFix();
     refreshEditables();
@@ -279,6 +280,21 @@
     });
   }
 
+  /* Ctrl+S(Mac: Cmd+S) → 툴바 '저장' 버튼과 동일하게 저장.
+     브라우저 기본 저장 대화상자는 막는다. */
+  var _saveShortcutBound = false;
+  function bindSaveShortcut() {
+    if (_saveShortcutBound) return;
+    _saveShortcutBound = true;
+    document.addEventListener("keydown", function (e) {
+      if (!document.documentElement.classList.contains("lp-admin")) return;
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+        e.preventDefault();
+        doSave();
+      }
+    }, true);
+  }
+
   /* =========================================================
      5) 텍스트 편집 / 이미지 / 항목 추가·삭제
      ========================================================= */
@@ -352,7 +368,10 @@
       container: ".pkg_steps", template: "<li>단계 설명</li>" },
     { wrap: "#procedure_type", item: ".prog_pkg", addLabel: "＋ 프로그램 추가",
       container: ".price_prog, .menu_cat", template: PROG_PKG_TPL },
-    { wrap: "#doctors .doctors_wrap", item: ".doctor_card", addLabel: "＋ 의사 추가" },
+    // 의사 추가: 기존 의사를 복제하므로 학력·경력(.doctor_career)이 여러 줄이면 그대로 복제됨
+    //  → reduceList로 새 의사 카드의 경력 리스트를 1줄만 남겨 기본값으로(나머지는 ＋ 추가로 늘림)
+    { wrap: "#doctors .doctors_wrap", item: ".doctor_card", addLabel: "＋ 의사 추가",
+      reduceList: ".doctor_career" },
     { wrap: "#doctors", item: ".doctor_career li", addLabel: "＋ 학력 및 경력 추가" },
     { wrap: "#BA .ba_grid", item: ".ba_card" },
     // 진료시간: 각 .info_hours(요일/시간 표) 끝에 '＋ 시간 추가', 행은 0개여도 버튼 노출
@@ -862,8 +881,10 @@
 
   function bindItemControls() {
     ITEM_DEFS.forEach(function (def) {
-      var wrap = q(def.wrap);
-      if (!wrap) return;
+      // def.wrap에 해당하는 컨테이너가 여러 개일 수 있다(예: wooa #doctors는 진료과별로
+      // .doctors_wrap이 여러 줄). 기존엔 q()로 첫 줄만 잡아 다른 줄 의사 카드엔
+      // 삭제(×)·＋추가 버튼이 안 달렸음 → qa()로 모든 줄을 순회해 각 줄마다 설치.
+      qa(def.wrap).forEach(function (wrap) {
       qa(def.item, wrap).forEach(function (item) {
         // 이 페이지의 실제 항목 구조를 한 번 기억(_proto) → 항목을 모두 지운 뒤 추가 시
         // 정적 템플릿 대신 원래 구조 그대로 복원(LP마다 다른 .sig_body/.sig_overlay 등 호환).
@@ -923,12 +944,20 @@
             }
           }
           if (!clone) return;
+          // 복제 항목 안의 특정 리스트(예: 의사 학력·경력)는 첫 줄만 남김 → 새 카드의 기본은 1칸
+          if (def.reduceList) {
+            qa(def.reduceList, clone).forEach(function (list) {
+              var lis = qa("li", list).filter(function (n) { return n.parentElement === list; });
+              lis.slice(1).forEach(function (li) { li.remove(); });
+            });
+          }
           cont.insertBefore(clone, firstAddBtn(cont) || add);   // 추가버튼 묶음 위에 삽입
           blankItem(clone);                 // 기존 텍스트 제거 + placeholder 힌트(삽입 후)
           refreshEditables();
           toast(tr("항목을 추가했습니다"));
         });
         cont.appendChild(add);
+      });
       });
     });
   }

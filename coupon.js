@@ -256,6 +256,8 @@
       ".cp-tag{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:10px}" +
       ".cp-tag.use{background:#e6f7ee;color:#06a047}" +
       ".cp-tag.no{background:#eef0f3;color:#6b7077}" +
+      ".cp-hide-today{display:block;margin:14px auto 0;border:0;background:transparent;color:#9aa0a6;" +
+      "font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit}" +
       // index 우측 하단 재표시 버튼
       ".cp-fab{position:fixed;right:16px;bottom:16px;z-index:9000;background:#06c755;color:#fff;border:0;" +
       "border-radius:999px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer;" +
@@ -290,7 +292,7 @@
   /* =====================================================================
      ① index 페이지 : 쿠폰 수령 팝업
      ===================================================================== */
-  function couponIssueView(content, close) {
+  function couponIssueView(content, close, hideToday) {
     content.innerHTML =
       "<span class='cp-badge'>初回限定</span>" +
       "<h3>このページから LINE で予約すると<br><b>5％OFF</b> クーポンプレゼント</h3>" +
@@ -301,11 +303,15 @@
       "<button class='cp-btn' id='cp-issue'>クーポンを受け取る</button>" +
       "<p class='cp-err' id='cp-err'></p>" +
       "<p class='cp-note'>※ 発行されたコードは、各病院ページの LINE 予約時にご入力ください。<br>" +
-      "※ コードを忘れた場合は、同じ電話番号を再入力すると再確認できます。</p>";
+      "※ コードを忘れた場合は、同じ電話番号を再入力すると再確認できます。</p>" +
+      (hideToday ? "<button type='button' class='cp-hide-today' id='cp-hide-today'>今日は表示しない</button>" : "");
 
     var phone = content.querySelector("#cp-phone");
     var err = content.querySelector("#cp-err");
     phone.focus();
+
+    var hideBtn = content.querySelector("#cp-hide-today");
+    if (hideBtn) hideBtn.addEventListener("click", function () { hideToday(); close(); });
 
     function doIssue() {
       err.textContent = "";
@@ -340,14 +346,25 @@
   }
 
   function initIndexPopup() {
-    var SEEN = "lp_coupon_popup_seen";
-    function show() { openModal(couponIssueView); }
+    var HIDE_KEY = "lp_coupon_hide_today";   // "오늘 하루 안보기" 누른 날짜(YYYY-M-D)
 
-    // 최초 1회만 자동 표시(세션 단위)
-    var seen = false;
-    try { seen = sessionStorage.getItem(SEEN) === "1"; } catch (e) {}
-    if (!seen) {
-      try { sessionStorage.setItem(SEEN, "1"); } catch (e) {}
+    function todayStr() {
+      var d = new Date();
+      return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    }
+    function hiddenToday() {
+      try { return localStorage.getItem(HIDE_KEY) === todayStr(); } catch (e) { return false; }
+    }
+    function hideToday() {
+      try { localStorage.setItem(HIDE_KEY, todayStr()); } catch (e) {}
+    }
+
+    // 닫아도 매번 자동 표시. 단 "今日は表示しない"를 누른 당일은 제외
+    function show() {
+      openModal(function (content, close) { couponIssueView(content, close, hideToday); });
+    }
+
+    if (!hiddenToday()) {
       setTimeout(show, 700);
     }
 
