@@ -68,10 +68,26 @@
   /* =========================================================
      1) 오버라이드 적용(일반 보기·관리자 보기 모두에서 가장 먼저 실행)
      ========================================================= */
+  /* 옛 저장본 정리: 카드를 감싼 <a class="event_item">를 <div class="event_item">로 치환.
+     (과거 템플릿이 <a href="#">로 카드를 만들어 저장한 경우 링크가 남아있는 문제 해결) */
+  function normalizeEventAnchors(root) {
+    if (!root) return;
+    qa("a.event_item", root).forEach(function (a) {
+      var div = document.createElement("div");
+      for (var i = 0; i < a.attributes.length; i++) {
+        var at = a.attributes[i];
+        if (at.name === "href") continue;
+        div.setAttribute(at.name, at.value);
+      }
+      while (a.firstChild) div.appendChild(a.firstChild);
+      a.parentNode.replaceChild(div, a);
+    });
+  }
+
   function applyHtml(sel, html) {
     if (html == null) return;
     var el = q(sel);
-    if (el) el.innerHTML = html;
+    if (el) { el.innerHTML = html; normalizeEventAnchors(el); }
   }
 
   function ensureShortsStyle() {
@@ -342,13 +358,13 @@
      template: 복제할 기존 항목이 없을 때 새로 만들 HTML(빈 컨테이너에서 추가 가능하게). */
   /* 평면 시술(.event_grid > .event_item, wooa)에서 시술이 0개일 때 새로 만들 템플릿 */
   var EVENT_ITEM_TPL =
-    '<a class="event_item" href="#">' +
+    '<div class="event_item">' +
     '<div class="event_info">' +
     '<p class="event_meta"></p>' +
     '<h3 class="event_name">시술이름</h3>' +
     '<p class="event_note"></p>' +
     '<p class="event_price"><span class="event_now">00<small>万ウォン</small></span></p>' +
-    '</div></a>';
+    '</div></div>';
   /* 시그니처 카드가 0개일 때 새로 만들 최후 폴백 템플릿(실제 구조는 _proto로 우선 복원). */
   var SIG_CARD_TPL =
     '<article class="sig_card">' +
