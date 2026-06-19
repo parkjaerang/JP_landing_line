@@ -29,7 +29,17 @@
 
   /* 편집 UI 한국어/일본어 전환(admin-i18n.js). 미로드 시 원문 그대로 반환 */
   function tr(s) { return window.LPI18n ? window.LPI18n.t(s) : s; }
-  function langLabel() { return window.LPI18n ? window.LPI18n.buttonLabel() : "日本語"; }
+  /* 언어 선택 <select> HTML(셀렉터 한 개로 한국어/일본어/중국어 전환) */
+  function langSelect(id, cls) {
+    return "<select id='" + id + "' class='" + cls + "'>" +
+      (window.LPI18n ? window.LPI18n.langOptions() : "") + "</select>";
+  }
+  function bindLangSelect(el) {
+    if (!el) return;
+    el.addEventListener("change", function () {
+      if (window.LPI18n) window.LPI18n.setLang(this.value);
+    });
+  }
 
   function authed() { try { return localStorage.getItem(AUTH_KEY) === "1"; } catch (e) { return false; } }
   function setAuthed(v) { try { v ? localStorage.setItem(AUTH_KEY, "1") : localStorage.removeItem(AUTH_KEY); } catch (e) {} }
@@ -46,7 +56,7 @@
     gate.className = "admin-gate";
     gate.innerHTML =
       "<div class='admin-gate-box'>" +
-      "<button type='button' id='admin-gate-lang' class='admin-gate-lang'>🌐 " + langLabel() + "</button>" +
+      langSelect("admin-gate-lang", "admin-gate-lang") +
       "<h2>" + tr("관리자 로그인") + "</h2>" +
       "<p>" + tr("비밀번호를 입력하세요") + "</p>" +
       "<input type='password' id='admin-pw' placeholder='" + tr("비밀번호") + "' autocomplete='current-password'>" +
@@ -55,9 +65,7 @@
       "</div>";
     document.body.appendChild(gate);
 
-    gate.querySelector("#admin-gate-lang").addEventListener("click", function () {
-      if (window.LPI18n) window.LPI18n.toggle();   // 전환 → 새로고침 → 게이트가 새 언어로 재렌더링
-    });
+    bindLangSelect(gate.querySelector("#admin-gate-lang"));   // 선택 → 새로고침 → 게이트가 새 언어로 재렌더링
 
     var pw = gate.querySelector("#admin-pw");
     var err = gate.querySelector("#admin-err");
@@ -93,13 +101,11 @@
     bar.innerHTML =
       "<span>" + tr("🔑 관리자 모드") + "</span><span class='admin-bar-sp'></span>" +
       "<span class='admin-hint'>" + tr("각 페이지의 '편집'에서 내용을 변경할 수 있습니다") + "</span>" +
-      "<button id='admin-lang' class='admin-lang'>🌐 " + langLabel() + "</button>" +
+      langSelect("admin-lang", "admin-lang") +
       "<a class='admin-link' href='./reservations.html'>" + tr("📋 예약 명단") + "</a>" +
       "<button id='admin-logout'>" + tr("로그아웃") + "</button>";
     document.body.insertBefore(bar, document.body.firstChild);
-    bar.querySelector("#admin-lang").addEventListener("click", function () {
-      if (window.LPI18n) window.LPI18n.toggle();
-    });
+    bindLangSelect(bar.querySelector("#admin-lang"));
     bar.querySelector("#admin-logout").addEventListener("click", function () {
       setAuthed(false);
       location.reload();
@@ -218,6 +224,8 @@
       "background:#1a1c1f;color:#fff;font-family:system-ui,sans-serif;font-size:13px}" +
       ".admin-bar .admin-bar-sp{flex:1}.admin-bar .admin-hint{opacity:.6;font-size:12px}" +
       ".admin-bar button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#3a3d42;color:#fff;font-weight:600}" +
+      ".admin-bar select.admin-lang{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#3a3d42;color:#fff;font-weight:600}" +
+      ".admin-bar select.admin-lang option{color:#1a1c1f;background:#fff}" +
       ".admin-bar .admin-link{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#06c755;color:#fff;font-weight:700;text-decoration:none;margin-right:8px}" +
       ".admin-edit-btn{position:absolute;top:10px;right:10px;z-index:20;border:0;border-radius:999px;padding:8px 14px;" +
       "background:#2f6df0;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.25)}" +
@@ -227,7 +235,21 @@
       // ".admin-thumb-btn:hover{background:#1a1c1f}" +
       ".admin-toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:99999;background:#1a1c1f;color:#fff;" +
       "padding:9px 18px;border-radius:999px;font-size:13px;font-family:system-ui,sans-serif;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.3)}" +
-      ".admin-toast.show{opacity:1}";
+      ".admin-toast.show{opacity:1}" +
+      /* ===== 모바일: 상단 바를 2줄로(제목/버튼) ===== */
+      "@media (max-width:760px){" +
+        ".admin-bar{flex-wrap:wrap;row-gap:8px;column-gap:8px;padding:8px 12px}" +
+        ".admin-bar>span:first-child{width:100%;font-weight:700;font-size:14px}" +
+        ".admin-bar .admin-bar-sp{display:none}" +
+        ".admin-bar .admin-hint{display:none}" +
+        ".admin-bar select.admin-lang{flex:0 0 auto;padding:9px 12px}" +
+        ".admin-bar .admin-link{flex:1;margin-right:0;text-align:center;padding:9px 12px}" +
+        ".admin-bar button{flex:1;padding:9px 12px}" +
+        /* 카드 위 두 버튼이 겹치지 않게: 오른쪽 위에 세로로 쌓기 */
+        ".admin-edit-btn,.admin-thumb-btn{font-size:11px;padding:6px 11px}" +
+        ".admin-edit-btn{top:8px;right:8px}" +
+        ".admin-thumb-btn{left:auto;right:8px;top:44px}" +
+      "}";
     document.head.appendChild(s);
   }
 })();

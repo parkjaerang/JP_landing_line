@@ -44,7 +44,8 @@
         }
 
         .rv-bar a,
-        .rv-bar button {
+        .rv-bar button,
+        .rv-bar select {
             font: inherit;
             cursor: pointer;
             border: 0;
@@ -54,6 +55,11 @@
             color: #fff;
             font-weight: 600;
             text-decoration: none;
+        }
+
+        .rv-bar select option {
+            color: #1a1c1f;
+            background: #fff;
         }
 
         .rv-bar a.home {
@@ -382,6 +388,156 @@
             color: #fff;
             border-color: #1a1c1f;
         }
+
+        /* ===== 반응형 (모바일 대응) ===== */
+        @media (max-width: 760px) {
+            .rv-bar {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 8px 12px;
+            }
+
+            .rv-bar b {
+                width: 100%;
+            }
+
+            .rv-bar .sp {
+                display: none;
+            }
+
+            .rv-bar a,
+            .rv-bar button,
+            .rv-bar select {
+                padding: 9px 12px;
+                font-size: 13px;
+            }
+
+            /* 2번째 줄: 버튼들이 폭을 나눠 여유있게 */
+            .rv-bar select#rv-lang {
+                flex: 0 0 auto;
+            }
+
+            .rv-bar a.home {
+                flex: 1;
+                margin-right: 0;
+                text-align: center;
+            }
+
+            .rv-bar #rv-logout {
+                flex: 1;
+            }
+
+            .rv-wrap {
+                padding: 16px 12px 48px;
+            }
+
+            .rv-head h1 {
+                font-size: 19px;
+            }
+
+            /* 통계 카드: 가로 스크롤 → 2열 그리드 */
+            .rv-stats {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .rv-stat {
+                padding: 10px 12px;
+            }
+
+            .rv-stat .n {
+                font-size: 19px;
+            }
+
+            /* 검색/필터 도구: 전부 한 줄 폭으로 */
+            .rv-tools {
+                gap: 8px;
+            }
+
+            .rv-tools input[type=search],
+            .rv-tools select,
+            .rv-tools button {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .rv-tools .sp {
+                display: none;
+            }
+
+            /* 테이블 → 카드 형태로 변환 */
+            table {
+                background: transparent;
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            table,
+            thead,
+            tbody,
+            th,
+            td,
+            tr {
+                display: block;
+            }
+
+            thead {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                clip: rect(0 0 0 0);
+                white-space: nowrap;
+            }
+
+            tr {
+                height: auto;
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, .06);
+                margin-bottom: 12px;
+                padding: 6px 14px;
+            }
+
+            tr:last-child td {
+                border-bottom: 1px solid #eef0f3;
+            }
+
+            tr td:last-child {
+                border-bottom: 0;
+            }
+
+            td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                width: auto !important;
+                min-width: 0 !important;
+                padding: 10px 0;
+                text-align: right;
+                white-space: normal;
+            }
+
+            td::before {
+                content: attr(data-label);
+                flex: 0 0 auto;
+                font-size: 12px;
+                font-weight: 700;
+                color: #6b7077;
+                text-align: left;
+            }
+
+            .col-date span {
+                white-space: normal;
+            }
+
+            .cstat-wrap {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+        }
     </style>
 </head>
 
@@ -389,7 +545,7 @@
     <div class="rv-bar">
         <b data-i18n="📋 예약 명단">📋 예약 명단</b>
         <span class="sp"></span>
-        <button id="rv-lang">🌐 日本語</button>
+        <select id="rv-lang"></select>
         <a class="home" href="./admin.html" data-i18n="← 관리 메인">← 관리 메인</a>
         <button id="rv-logout" data-i18n="로그아웃">로그아웃</button>
     </div>

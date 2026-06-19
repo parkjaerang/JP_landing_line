@@ -29,7 +29,7 @@
   /* 편집 UI 한국어/일본어 전환(admin-i18n.js). 미로드 시 원문 그대로 반환.
      ※ 지역 변수명 't'가 일부 함수에서 쓰이므로 번역 함수는 'tr'로 둔다. */
   function tr(s) { return window.LPI18n ? window.LPI18n.t(s) : s; }
-  function langLabel() { return window.LPI18n ? window.LPI18n.buttonLabel() : "日本語"; }
+  function langOptionsHTML() { return window.LPI18n ? window.LPI18n.langOptions() : ""; }
 
   /* ---- 페이지 키(예: wooa_LP) ---- */
   function getPageKey() {
@@ -205,6 +205,8 @@
       ".lp-toolbar .lp-title{font-weight:700}.lp-toolbar .lp-key{opacity:.6;font-size:11px}.lp-toolbar .lp-sp{flex:1}" +
       ".lp-toolbar button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#2f6df0;color:#fff;font-weight:600}" +
       ".lp-toolbar button.ghost{background:#3a3d42}.lp-toolbar button.warn{background:#e8553b}" +
+      ".lp-toolbar select.lp-lang{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#3a3d42;color:#fff;font-weight:600}" +
+      ".lp-toolbar select.lp-lang option{color:#1a1c1f;background:#fff}" +
       "html.lp-admin body{padding-top:54px!important}" +
       /* 편집 모드: 콘텐츠의 hover/전환/애니메이션 비활성화(편집 UI[data-lp-ec]는 제외) */
       "html.lp-admin *:not([data-lp-ec]):not([data-lp-ec] *){animation:none!important;transition:none!important}" +
@@ -279,7 +281,16 @@
       ".lp-srow select{font:inherit;padding:8px;border:1px solid #ccc;border-radius:8px}" +
       ".lp-srow .lp-sdel{flex:0 0 auto;width:30px;height:30px;border-radius:8px;border:0;background:#e8553b;color:#fff;font-size:16px;line-height:1;cursor:pointer}" +
       ".lp-badge{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:99999;background:#1a1c1f;color:#fff;padding:9px 18px;border-radius:999px;font-size:13px;font-family:system-ui;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.3)}" +
-      ".lp-badge.show{opacity:1}";
+      ".lp-badge.show{opacity:1}" +
+      /* ===== 모바일: 편집 툴바를 2줄로(제목/버튼) ===== */
+      "@media (max-width:760px){" +
+        ".lp-toolbar{flex-wrap:wrap;gap:8px;padding:8px 12px}" +
+        ".lp-toolbar .lp-title{font-size:14px}" +
+        ".lp-toolbar .lp-sp{flex:1 0 100%;height:0;margin:0}" +   /* 줄바꿈용: 이후 요소를 다음 줄로 */
+        ".lp-toolbar select.lp-lang{flex:1 1 auto;text-align:center;padding:9px 12px}" +
+        ".lp-toolbar button{flex:1 1 auto;min-width:84px;padding:9px 12px}" +
+        "html.lp-admin body{padding-top:112px!important}" +
+      "}";
     document.head.appendChild(s);
   }
 
@@ -293,18 +304,21 @@
     bar.innerHTML =
       "<span class='lp-title'>" + tr("✏️ 편집 모드") + "</span><span class='lp-key'>" + PAGE_KEY + "</span>" +
       "<span class='lp-sp'></span>" +
-      "<button class='ghost' data-act='lang'>🌐 " + langLabel() + "</button>" +
+      "<select class='ghost lp-lang' data-act='lang'>" + langOptionsHTML() + "</select>" +
       "<button class='ghost' data-act='preview'>" + tr("미리보기") + "</button>" +
       "<button class='warn' data-act='reset'>" + tr("변경 취소") + "</button>" +
       "<button data-act='save'>" + tr("저장") + "</button>" +
       "<button class='ghost' data-act='exit'>" + tr("종료") + "</button>";
     document.body.appendChild(bar);
+    var langSel = bar.querySelector("select[data-act='lang']");
+    if (langSel) langSel.addEventListener("change", function () {
+      if (window.LPI18n) window.LPI18n.setLang(this.value);
+    });
     bar.addEventListener("click", function (e) {
       var b = e.target.closest("button");
       if (!b) return;
       var act = b.getAttribute("data-act");
-      if (act === "lang") { if (window.LPI18n) window.LPI18n.toggle(); }
-      else if (act === "save") doSave();
+      if (act === "save") doSave();
       else if (act === "reset") doReset();
       else if (act === "preview") window.open(location.pathname, "_blank");
       else if (act === "exit") {

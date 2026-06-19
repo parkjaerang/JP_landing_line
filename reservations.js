@@ -40,11 +40,11 @@
 
   /* 언어 전환 버튼(🌐) : 현재 언어에 맞는 라벨 표시 + 클릭 시 전환 */
   function setupLangButton() {
-    var btn = document.getElementById("rv-lang");
-    if (!btn) return;
-    btn.textContent = "🌐 " + (window.LPI18n ? window.LPI18n.buttonLabel() : "日本語");
-    btn.addEventListener("click", function () {
-      if (window.LPI18n) window.LPI18n.toggle();
+    var sel = document.getElementById("rv-lang");
+    if (!sel) return;
+    if (window.LPI18n) sel.innerHTML = window.LPI18n.langOptions();
+    sel.addEventListener("change", function () {
+      if (window.LPI18n) window.LPI18n.setLang(this.value);
     });
   }
 
@@ -54,14 +54,14 @@
     gate.className = "rv-gate";
     gate.innerHTML =
       "<div class='rv-gate-box'>" +
-      "<button type='button' id='rv-gate-lang' class='rv-gate-lang'>🌐 " + (window.LPI18n ? window.LPI18n.buttonLabel() : "日本語") + "</button>" +
+      "<select id='rv-gate-lang' class='rv-gate-lang'>" + (window.LPI18n ? window.LPI18n.langOptions() : "") + "</select>" +
       "<h2>" + tr("예약 명단 로그인") + "</h2><p>" + tr("비밀번호를 입력하세요") + "</p>" +
       "<input type='password' id='rv-pw' placeholder='" + tr("비밀번호") + "'>" +
       "<button id='rv-login'>" + tr("로그인") + "</button>" +
       "<p class='rv-gate-err' id='rv-pw-err'></p></div>";
     document.body.appendChild(gate);
-    gate.querySelector("#rv-gate-lang").addEventListener("click", function () {
-      if (window.LPI18n) window.LPI18n.toggle();   // 전환 → 새로고침 → 게이트가 새 언어로 재렌더링
+    gate.querySelector("#rv-gate-lang").addEventListener("change", function () {
+      if (window.LPI18n) window.LPI18n.setLang(this.value);   // 선택 → 새로고침 → 게이트가 새 언어로 재렌더링
     });
     var pw = gate.querySelector("#rv-pw");
     var err = gate.querySelector("#rv-pw-err");
@@ -254,18 +254,22 @@
     });
     var wrap = document.getElementById("rv-table");
     if (!rows.length) { wrap.innerHTML = "<div class='rv-empty'>" + tr("예약 데이터가 없습니다.") + "</div>"; return; }
+    var L = {
+      date: tr("일시"), name: tr("이름"), phone: tr("전화번호"), hosp: tr("이용 병원"),
+      contact: tr("연락 상태"), coupon: tr("쿠폰"), code: tr("코드")
+    };
     var html = "<table><thead><tr>" +
-      "<th class='col-date'>" + tr("일시") + "</th><th>" + tr("이름") + "</th><th>" + tr("전화번호") + "</th><th>" + tr("이용 병원") + "</th><th class='col-contact'>" + tr("연락 상태") + "</th><th class='col-coupon'>" + tr("쿠폰") + "</th><th class='col-code'>" + tr("코드") + "</th>" +
+      "<th class='col-date'>" + L.date + "</th><th>" + L.name + "</th><th>" + L.phone + "</th><th>" + L.hosp + "</th><th class='col-contact'>" + L.contact + "</th><th class='col-coupon'>" + L.coupon + "</th><th class='col-code'>" + L.code + "</th>" +
       "</tr></thead><tbody>";
     rows.forEach(function (r) {
       html += "<tr>" +
-        "<td class='col-date'>" + fmtDateLines(r.createdAt) + "</td>" +
-        "<td>" + esc(r.name) + "</td>" +
-        "<td>" + esc(r.phone) + "</td>" +
-        "<td>" + esc(r.hospitalName || r.hospital) + "</td>" +
-        "<td class='col-contact'>" + contactCell(r) + "</td>" +
-        "<td class='col-coupon'>" + couponCell(r) + "</td>" +
-        "<td class='col-code'>" + (r.couponCode ? "<code class='code'>" + esc(r.couponCode) + "</code>" : "—") + "</td>" +
+        "<td class='col-date' data-label='" + esc(L.date) + "'>" + fmtDateLines(r.createdAt) + "</td>" +
+        "<td data-label='" + esc(L.name) + "'>" + esc(r.name) + "</td>" +
+        "<td data-label='" + esc(L.phone) + "'>" + esc(r.phone) + "</td>" +
+        "<td data-label='" + esc(L.hosp) + "'>" + esc(r.hospitalName || r.hospital) + "</td>" +
+        "<td class='col-contact' data-label='" + esc(L.contact) + "'>" + contactCell(r) + "</td>" +
+        "<td class='col-coupon' data-label='" + esc(L.coupon) + "'>" + couponCell(r) + "</td>" +
+        "<td class='col-code' data-label='" + esc(L.code) + "'>" + (r.couponCode ? "<code class='code'>" + esc(r.couponCode) + "</code>" : "—") + "</td>" +
         "</tr>";
     });
     html += "</tbody></table>";
@@ -298,19 +302,23 @@
     });
     var wrap = document.getElementById("rv-table");
     if (!rows.length) { wrap.innerHTML = "<div class='rv-empty'>" + tr("쿠폰 발급 데이터가 없습니다.") + "</div>"; return; }
+    var L = {
+      code: tr("코드"), phone: tr("발급 전화번호"), status: tr("상태"),
+      issued: tr("발급 일시"), usedAt: tr("사용 일시"), hosp: tr("사용 병원")
+    };
     var html = "<table><thead><tr>" +
-      "<th>" + tr("코드") + "</th><th>" + tr("발급 전화번호") + "</th><th>" + tr("상태") + "</th><th>" + tr("발급 일시") + "</th><th>" + tr("사용 일시") + "</th><th>" + tr("사용 병원") + "</th>" +
+      "<th>" + L.code + "</th><th>" + L.phone + "</th><th>" + L.status + "</th><th>" + L.issued + "</th><th>" + L.usedAt + "</th><th>" + L.hosp + "</th>" +
       "</tr></thead><tbody>";
     rows.forEach(function (c) {
       html += "<tr>" +
-        "<td><code class='code'>" + esc(c.code) + "</code></td>" +
-        "<td>" + esc(c.phone) + "</td>" +
-        "<td>" + (c.used
+        "<td data-label='" + esc(L.code) + "'><code class='code'>" + esc(c.code) + "</code></td>" +
+        "<td data-label='" + esc(L.phone) + "'>" + esc(c.phone) + "</td>" +
+        "<td data-label='" + esc(L.status) + "'>" + (c.used
             ? "<span class='pill use'>" + tr("사용 완료") + "</span>"
             : "<span class='pill no'>" + tr("미사용") + "</span>") + "</td>" +
-        "<td>" + esc(fmtDate(c.issuedAt)) + "</td>" +
-        "<td>" + esc(fmtDate(c.usedAt)) + "</td>" +
-        "<td>" + esc(c.hospital || "—") + "</td>" +
+        "<td data-label='" + esc(L.issued) + "'>" + esc(fmtDate(c.issuedAt)) + "</td>" +
+        "<td data-label='" + esc(L.usedAt) + "'>" + esc(fmtDate(c.usedAt)) + "</td>" +
+        "<td data-label='" + esc(L.hosp) + "'>" + esc(c.hospital || "—") + "</td>" +
         "</tr>";
     });
     html += "</tbody></table>";
