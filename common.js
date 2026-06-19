@@ -86,7 +86,17 @@ function initCardSlider(track, cardSelector, { interval = 2500, gap = 16 } = {})
     let timer = null;
     let paused = false;
     let isDragging = false;
+    let cooldown = false;        // 드래그 직후 잠깐 자동 슬라이드 정지
+    let cooldownTimer = null;
+    const RESUME_DELAY = 2000;   // 손을 뗀 뒤 자동 슬라이드 재개까지 대기(ms)
     let index = 0; // 현재 카드 인덱스
+
+    // 드래그 등 사용자 조작 후 잠깐 자동 슬라이드를 멈춘다
+    function holdAuto() {
+        cooldown = true;
+        clearTimeout(cooldownTimer);
+        cooldownTimer = setTimeout(function () { cooldown = false; }, RESUME_DELAY);
+    }
 
     function nextSlide() {
         const cards = track.querySelectorAll(cardSelector);
@@ -100,7 +110,7 @@ function initCardSlider(track, cardSelector, { interval = 2500, gap = 16 } = {})
     function start() {
         if (timer) return;
         timer = setInterval(() => {
-            if (!paused && !isDragging) nextSlide();
+            if (!paused && !isDragging && !cooldown) nextSlide();
         }, interval);
     }
 
@@ -116,6 +126,7 @@ function initCardSlider(track, cardSelector, { interval = 2500, gap = 16 } = {})
     let moved = false;
 
     track.addEventListener('pointerdown', (e) => {
+        clearTimeout(cooldownTimer);   // 진행 중이던 재개 대기 취소
         isDragging = true;
         moved = false;
         startX = e.clientX;
@@ -135,6 +146,7 @@ function initCardSlider(track, cardSelector, { interval = 2500, gap = 16 } = {})
     function endDrag(e) {
         if (!isDragging) return;
         isDragging = false;
+        holdAuto();   // 드래그 직후 잠깐 멈췄다가 자동 슬라이드 재개
         track.classList.remove('dragging');
         track.style.scrollSnapType = '';
         try { track.releasePointerCapture(e.pointerId); } catch (_) {}

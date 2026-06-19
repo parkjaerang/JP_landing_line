@@ -198,6 +198,8 @@
       "html.lp-admin #procedure_type small,html.lp-admin .lp-unit,html.lp-admin #procedure_type .event_unit{-webkit-user-modify:read-only!important;user-select:none;outline:none!important;cursor:default}" +
       /* 비어 있는 소제목 등: data-ph 안내문구를 흐리게 표시(실제 콘텐츠는 빈 상태 → view 미표시) */
       "html.lp-admin [contenteditable='true'][data-ph]:empty::before{content:attr(data-ph);}" +
+      /* ×버튼 등을 자식으로 가져 :empty가 깨지는 칸(소제목): .lp-ph일 때 placeholder 표시 */
+      "html.lp-admin [contenteditable='true'][data-ph].lp-ph::before{content:attr(data-ph);pointer-events:none}" +
       /* 클릭 요소는 pointer 커서(편집용 텍스트 커서보다 우선) */
       "html.lp-admin a,html.lp-admin button,html.lp-admin [role='button'],html.lp-admin .tab,html.lp-admin .subtab,html.lp-admin .plan-switch-btn,html.lp-admin .faq_q,html.lp-admin .faq_arrow,html.lp-admin .line_btn,html.lp-admin label,html.lp-admin select,html.lp-admin summary,html.lp-admin .swiper-button-next,html.lp-admin .swiper-button-prev{cursor:pointer!important}" +
       "html.lp-admin .lp-item{position:relative}" +
@@ -435,12 +437,12 @@
     bindItemControls();
     bindGroupControls();
     bindCategoryControls();
+    bindSubInputs();        // 자동 부제목칸을 먼저 생성 → 아래 bindGroupDelete가 ×와 placeholder를 함께 처리
     bindCategoryDelete();
     bindGroupDelete();
     bindHighlightControls();
     bindGroupItemAdd();
     bindHighlightDelete();
-    bindSubInputs();
     bindEventSub();
     bindAccordionToggle();
     bindTabControls();
@@ -574,7 +576,6 @@
       qa(def.cat, ev).forEach(function (cat) {
         qa("." + def.sub, cat).forEach(function (sub) {
           if (sub.parentElement !== cat) return;
-          if (sub.getAttribute("data-lp-autosub") === "1") return;  // 자동 입력칸은 × 제외(빈칸은 저장 시 사라짐)
           if (sub.getAttribute("data-lp-grpdel") === "1") return;
           sub.setAttribute("data-lp-grpdel", "1");
           sub.classList.add("lp-grp");
@@ -598,9 +599,23 @@
             toast(tr("그룹을 삭제했습니다"));
           });
           sub.appendChild(del);
+          refreshPhClass(sub);   // ×버튼 자식이 생겨 :empty가 깨지므로, 빈 소제목은 .lp-ph로 placeholder 표시
         });
       });
     });
+  }
+
+  /* 편집칸 안에 ×버튼 등 편집 UI([data-lp-ec])가 자식으로 있으면 :empty가 깨져
+     :empty::before placeholder가 안 뜬다. 이런 칸(소제목 등)은 '실제 텍스트 유무'를
+     직접 판별해 .lp-ph 클래스로 placeholder 표시를 토글한다. */
+  function refreshPhClass(el) {
+    if (!el || !el.hasAttribute || !el.hasAttribute("data-ph")) return;
+    var hasText = Array.prototype.some.call(el.childNodes, function (n) {
+      if (n.nodeType === 3) return !!n.textContent.trim();                 // 텍스트 노드
+      if (n.nodeType === 1 && !n.hasAttribute("data-lp-ec")) return !!n.textContent.trim(); // 편집 UI 아닌 요소
+      return false;
+    });
+    el.classList.toggle("lp-ph", !hasText);
   }
 
   /* classone: .highlight-box 그룹이 있는 grid는 그룹별 「＋ 시술 추가」를 따로 두므로,
@@ -1663,6 +1678,9 @@
       if (!el || el.nodeType !== 1) return;
       if (el.getAttribute("contenteditable") !== "true") return;
       if (!el.hasAttribute("data-ph")) return;
+      // ×버튼 등 편집 UI를 자식으로 가진 칸(소제목): innerHTML을 비우면 버튼이 지워지므로
+      // 텍스트 유무만 보고 .lp-ph로 placeholder를 토글한다.
+      if (q("[data-lp-ec]", el)) { refreshPhClass(el); return; }
       if (el.innerHTML !== "" && !el.textContent.trim()) el.innerHTML = "";
     }, true);
   }
@@ -1705,6 +1723,7 @@
     qa("[data-lp-acc]", clone).forEach(function (n) { n.removeAttribute("data-lp-acc"); });
     qa(".lp-collapsed", clone).forEach(function (n) { n.classList.remove("lp-collapsed"); });
     qa(".lp-grp", clone).forEach(function (n) { n.classList.remove("lp-grp"); });
+    qa(".lp-ph", clone).forEach(function (n) { n.classList.remove("lp-ph"); });
     qa(".lp-img", clone).forEach(function (n) { n.classList.remove("lp-img"); });
     qa("[data-lp-img]", clone).forEach(function (n) { n.removeAttribute("data-lp-img"); });
     qa(".lp-img-empty", clone).forEach(function (n) { n.classList.remove("lp-img-empty"); });   // 빈 이미지 placeholder 표식 → 저장본에서 제거
