@@ -218,9 +218,10 @@ if (window.Swiper) {
     const slides = document.querySelectorAll('#hero_intro .hero_bg');
     if (slides.length < 2) return;
     let i = 0;
+    // 주기 3초 = 페이드아웃 0.9 + 페이드인 0.9 + 노출 유지 1.2초
     setInterval(() => {
         slides[i].classList.remove('is-active');
         i = (i + 1) % slides.length;
         slides[i].classList.add('is-active');
-    }, 4000);
+    }, 3000);
 })();
