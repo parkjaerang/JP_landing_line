@@ -202,7 +202,7 @@ img{
     height: 24px;
     border-radius: 50%;
     background-color: rgba(252, 248, 243, 0.14);
-    transition: transform .35s ease, background-color .3s ease;
+    transition: transform .35s ease, background-color .5s ease;
 }
 
 .menu_arrow::after{
@@ -225,7 +225,7 @@ img{
 .menu_body{
     max-height: 0;
     overflow: hidden;
-    transition: max-height .35s ease;
+    transition: max-height .5s ease;
 }
 
 .menu_sub{

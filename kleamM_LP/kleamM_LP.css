@@ -186,7 +186,7 @@ img{
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform .3s ease;
+    transition: transform .5s ease;
 }
 
 .prog_chevron::before{
@@ -206,7 +206,7 @@ img{
 .prog_body{
     max-height: 0;
     overflow: hidden;
-    transition: max-height .35s ease;
+    transition: max-height .5s ease;
 }
 
 .prog_sub{
