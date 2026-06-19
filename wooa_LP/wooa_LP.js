@@ -8,6 +8,16 @@ if (sigTrack) {
     let timer = null;
     let paused = false;
     let isDragging = false;
+    let cooldown = false;        // 드래그 직후 잠깐 자동 슬라이드 정지
+    let cooldownTimer = null;
+    const RESUME_DELAY = 2000;   // 손을 뗀 뒤 자동 슬라이드 재개까지 대기(ms)
+
+    // 드래그 등 사용자 조작 후 잠깐 자동 슬라이드를 멈춘다
+    function holdAuto() {
+        cooldown = true;
+        clearTimeout(cooldownTimer);
+        cooldownTimer = setTimeout(() => { cooldown = false; }, RESUME_DELAY);
+    }
 
     // 양쪽 여백은 CSS의 .sig_track::before / ::after 로 가운데 정렬을 보장
 
@@ -26,7 +36,7 @@ if (sigTrack) {
     function start() {
         if (timer) return;
         timer = setInterval(() => {
-            if (!paused && !isDragging) nextSlide();
+            if (!paused && !isDragging && !cooldown) nextSlide();
         }, INTERVAL);
     }
 
@@ -47,6 +57,7 @@ if (sigTrack) {
     let moved = false;
 
     sigTrack.addEventListener('pointerdown', (e) => {
+        clearTimeout(cooldownTimer);   // 진행 중이던 재개 대기 취소
         isDragging = true;
         moved = false;
         startX = e.clientX;
@@ -66,6 +77,7 @@ if (sigTrack) {
     function endDrag(e) {
         if (!isDragging) return;
         isDragging = false;
+        holdAuto();   // 드래그 직후 잠깐 멈췄다가 자동 슬라이드 재개
         sigTrack.classList.remove('dragging');
         sigTrack.style.scrollSnapType = '';
         try { sigTrack.releasePointerCapture(e.pointerId); } catch (_) {}
