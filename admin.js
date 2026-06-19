@@ -9,10 +9,22 @@
 (function () {
   "use strict";
 
+  /* =============================================================
+     ★ 백엔드 전환 필요 (보안 최우선) / ★ 需改造为后端（安全最高优先级）
+     -------------------------------------------------------------
+     [KO] 비밀번호가 JS 소스에 평문으로 노출되어 누구나 볼 수 있습니다.
+          → 서버 로그인 API(POST /api/admin/login)로 교체하고,
+            인증 상태는 localStorage 플래그가 아니라 서버 세션/JWT로 관리하세요.
+     [CN] 密码以明文写在 JS 源码中，任何人都能看到。
+          → 改为服务器登录接口(POST /api/admin/login)，
+            登录状态用服务器会话/JWT 管理，而非 localStorage 标志位。
+     ============================================================= */
   /* ▼ 여기에서 비밀번호를 변경하세요 ▼ */
   var ADMIN_PASSWORD = "admin1234";
   /* ▲ 여기까지 ▲ */
 
+  // [KO] 클라이언트 위조 가능한 인증 플래그 → 서버 인증 토큰으로 대체
+  // [CN] 可被客户端伪造的认证标志 → 用服务器认证令牌替代
   var AUTH_KEY = "lp_admin_authed";
 
   /* 편집 UI 한국어/일본어 전환(admin-i18n.js). 미로드 시 원문 그대로 반환 */
@@ -34,6 +46,7 @@
     gate.className = "admin-gate";
     gate.innerHTML =
       "<div class='admin-gate-box'>" +
+      "<button type='button' id='admin-gate-lang' class='admin-gate-lang'>🌐 " + langLabel() + "</button>" +
       "<h2>" + tr("관리자 로그인") + "</h2>" +
       "<p>" + tr("비밀번호를 입력하세요") + "</p>" +
       "<input type='password' id='admin-pw' placeholder='" + tr("비밀번호") + "' autocomplete='current-password'>" +
@@ -41,6 +54,10 @@
       "<p class='admin-err' id='admin-err'></p>" +
       "</div>";
     document.body.appendChild(gate);
+
+    gate.querySelector("#admin-gate-lang").addEventListener("click", function () {
+      if (window.LPI18n) window.LPI18n.toggle();   // 전환 → 새로고침 → 게이트가 새 언어로 재렌더링
+    });
 
     var pw = gate.querySelector("#admin-pw");
     var err = gate.querySelector("#admin-err");
@@ -128,6 +145,12 @@
       btn.addEventListener("click", function (e) {
         e.preventDefault(); e.stopPropagation();
         pickImage(function (dataUrl) {
+          /* ★ 백엔드 전환 필요 (이미지 스토리지) / ★ 需改造为后端（图片存储）
+             [KO] 이미지를 base64(dataURL)로 localStorage에 저장 → 용량(약 5MB) 한계로
+                  실제 운영 불가. 파일 업로드 API(POST /api/upload)로 보내고
+                  반환된 CDN/스토리지 URL만 저장하세요.
+             [CN] 把图片以 base64(dataURL) 存进 localStorage → 受容量(约5MB)限制无法上线。
+                  应通过文件上传接口(POST /api/upload)上传，仅保存返回的 CDN/存储 URL。 */
           img.setAttribute("src", dataUrl);
           img.removeAttribute("srcset");
           var data = window.LPGallery.load();
@@ -182,7 +205,8 @@
       "body.admin-locked{overflow:hidden}" +
       ".admin-gate{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;" +
       "background:rgba(20,24,31,.55);backdrop-filter:blur(6px);font-family:system-ui,-apple-system,'Segoe UI','Noto Sans JP',sans-serif}" +
-      ".admin-gate-box{background:#fff;border-radius:16px;padding:32px 28px;width:min(90vw,360px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}" +
+      ".admin-gate-box{position:relative;background:#fff;border-radius:16px;padding:32px 28px;width:min(90vw,360px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}" +
+      ".admin-gate-lang{position:absolute;top:12px;right:12px;width:auto!important;padding:6px 12px!important;border:1px solid #ddd!important;border-radius:999px!important;background:#f4f5f7!important;color:#3a3d42!important;font-size:12px!important;font-weight:600!important;cursor:pointer}" +
       ".admin-gate-box h2{font-size:20px;margin-bottom:6px;color:#1a1c1f}" +
       ".admin-gate-box p{font-size:13px;color:#6b7077;margin-bottom:18px}" +
       ".admin-gate-box input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:15px;margin-bottom:12px}" +

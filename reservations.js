@@ -6,6 +6,11 @@
 (function () {
   "use strict";
 
+  /* ★ 백엔드 전환 필요 (인증) / ★ 需改造为后端（认证）
+     [KO] admin.js와 동일하게 비밀번호가 평문 노출. 서버 로그인 API로 교체하고,
+          예약 명단(개인정보)은 인증된 요청에만 GET /api/reservations 로 제공하세요.
+     [CN] 与 admin.js 一样密码明文暴露。应改为服务器登录接口，
+          预约名单(个人信息)仅对已认证请求通过 GET /api/reservations 返回。 */
   var ADMIN_PASSWORD = "admin1234";   // admin.js와 동일한 비밀번호
   var AUTH_KEY = "lp_admin_authed";
 
@@ -48,11 +53,16 @@
     var gate = document.createElement("div");
     gate.className = "rv-gate";
     gate.innerHTML =
-      "<div class='rv-gate-box'><h2>" + tr("예약 명단 로그인") + "</h2><p>" + tr("비밀번호를 입력하세요") + "</p>" +
+      "<div class='rv-gate-box'>" +
+      "<button type='button' id='rv-gate-lang' class='rv-gate-lang'>🌐 " + (window.LPI18n ? window.LPI18n.buttonLabel() : "日本語") + "</button>" +
+      "<h2>" + tr("예약 명단 로그인") + "</h2><p>" + tr("비밀번호를 입력하세요") + "</p>" +
       "<input type='password' id='rv-pw' placeholder='" + tr("비밀번호") + "'>" +
       "<button id='rv-login'>" + tr("로그인") + "</button>" +
       "<p class='rv-gate-err' id='rv-pw-err'></p></div>";
     document.body.appendChild(gate);
+    gate.querySelector("#rv-gate-lang").addEventListener("click", function () {
+      if (window.LPI18n) window.LPI18n.toggle();   // 전환 → 새로고침 → 게이트가 새 언어로 재렌더링
+    });
     var pw = gate.querySelector("#rv-pw");
     var err = gate.querySelector("#rv-pw-err");
     function tryLogin() {
@@ -84,6 +94,11 @@
     document.getElementById("rv-csv").addEventListener("click", downloadCsv);
     document.getElementById("rv-clear").addEventListener("click", function () {
       if (!confirm(tr("모든 예약·쿠폰 데이터를 삭제합니다. 계속하시겠습니까?"))) return;
+      /* ★ 백엔드 전환 필요 / ★ 需改造为后端
+         [KO] localStorage 일괄 삭제 → 서버 데이터 삭제 API(DELETE /api/reservations,
+              DELETE /api/coupons)로 교체. 운영에서는 전체 삭제 대신 권한·감사로그 필요.
+         [CN] 清空 localStorage → 改为服务器删除接口(DELETE /api/reservations,
+              DELETE /api/coupons)。生产环境应配合权限控制与审计日志，避免整表清空。 */
       try {
         localStorage.removeItem("lp_reservations_v1");
         localStorage.removeItem("lp_coupons_v1");

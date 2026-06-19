@@ -297,12 +297,28 @@
         }
 
         .rv-gate-box {
+            position: relative;
             background: #fff;
             border-radius: 16px;
             padding: 32px 28px;
             width: min(90vw, 360px);
             text-align: center;
             box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+        }
+
+        .rv-gate-box .rv-gate-lang {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: auto;
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 999px;
+            background: #f4f5f7;
+            color: #3a3d42;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
         .rv-gate-box h2 {

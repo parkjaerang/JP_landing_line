@@ -10,6 +10,19 @@
 (function () {
   "use strict";
 
+  /* ★ 백엔드 전환 필요 (페이지 콘텐츠 CMS) / ★ 需改造为后端（页面内容 CMS）
+     [KO] 관리자가 수정한 섹션 내용(히어로/시그니처/요금/의사/병원정보/B&A/푸터/쇼츠)을
+          페이지별로 localStorage에 저장합니다 → 수정한 그 브라우저에서만 보이고 실제
+          방문자에게는 반영되지 않습니다. 콘텐츠 조회/저장 API로 교체하세요.
+            loadOverride  → GET /api/pages/:pageKey/content   (콘텐츠 불러오기)
+            saveOverride  → PUT /api/pages/:pageKey/content   (콘텐츠 저장)
+          인증 플래그(AUTH_KEY)도 서버 인증으로 대체.
+     [CN] 管理员修改的各区块内容(主视觉/招牌/价格/医生/医院信息/B&A/页脚/Shorts)
+          按页面存进 localStorage → 仅修改者本浏览器可见，真实访客看不到。
+          应改为内容读写接口：
+            loadOverride  → GET /api/pages/:pageKey/content   (读取内容)
+            saveOverride  → PUT /api/pages/:pageKey/content   (保存内容)
+          认证标志(AUTH_KEY)同样改为服务器认证。 */
   var AUTH_KEY = "lp_admin_authed";
   var OVERRIDE_PREFIX = "lp_override_v1::";
 
@@ -45,6 +58,11 @@
   function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
+  /* ★ 백엔드 교체 포인트 / ★ 后端替换点
+     [KO] 이 두 함수의 localStorage 호출만 fetch로 바꾸면 콘텐츠가 서버에 저장되어
+          모든 방문자에게 반영됩니다. (loadOverride=GET, saveOverride=PUT)
+     [CN] 仅把这两个函数里的 localStorage 调用改为 fetch，内容即可存到服务器并
+          对所有访客生效。(loadOverride=GET, saveOverride=PUT) */
   function loadOverride() {
     var raw = lsGet(OVERRIDE_PREFIX + PAGE_KEY);
     if (!raw) return {};
@@ -893,6 +911,14 @@
     });
   }
 
+  /* ★ 백엔드 전환 필요 (이미지 스토리지) / ★ 需改造为后端（图片存储）
+     [KO] 선택한 이미지를 base64(dataURL)로 읽어 콘텐츠에 그대로 박아 localStorage에
+          저장합니다 → 용량(약 5MB)을 금방 초과하고 이 브라우저에만 남습니다.
+          파일 업로드 API(POST /api/upload)로 보낸 뒤 반환된 URL을 src에 넣으세요.
+          (readAsDataURL → fetch 업로드 후 받은 URL을 cb로 전달)
+     [CN] 把所选图片读成 base64(dataURL) 直接嵌入内容并存进 localStorage →
+          很快超出容量(约5MB)且仅留在本浏览器。应改为文件上传接口(POST /api/upload)，
+          把返回的 URL 写入 src。(readAsDataURL → 改为 fetch 上传后将 URL 传给 cb) */
   function pickImage(cb) {
     var inp = document.createElement("input");
     inp.type = "file"; inp.accept = "image/*"; inp.setAttribute("data-lp-ec", "1");

@@ -20,6 +20,11 @@
                   (oaId 가 있으면 쿠폰코드가 자동 입력된 메시지를 보낼 수 있음)
      lineUrl / oaId 가 비어 있으면 placeholder QR 이 표시됩니다.
      ===================================================================== */
+  /* ★ 백엔드 전환 권장 (병원 설정) / ★ 建议改造为后端（医院配置）
+     [KO] 병원별 LINE 정보가 코드에 하드코딩되어 있습니다. 관리자가 화면에서
+          수정하려면 설정 조회 API(GET /api/hospitals)로 불러오세요. (우선순위 낮음)
+     [CN] 各医院的 LINE 信息硬编码在代码中。若要让管理员在界面修改，
+          应通过配置接口(GET /api/hospitals)读取。（优先级较低） */
   var LINE_CONFIG = {
     wooa_LP:      { name: "WOOA",            lineUrl: "", oaId: "" },
     kleamH_LP:    { name: "Kleam 弘大店",     lineUrl: "", oaId: "" },
@@ -30,6 +35,20 @@
   };
   /* ▲▲▲ 설정 끝 ▲▲▲ */
 
+  /* =============================================================
+     ★ 백엔드 전환 필요 (쿠폰·예약 데이터) / ★ 需改造为后端（优惠券·预约数据）
+     -------------------------------------------------------------
+     [KO] 아래 3개 키는 모두 localStorage = "이 브라우저 1대 안"에서만 유효합니다.
+          → 고객 휴대폰에서 발행한 쿠폰을 병원 PC에서 검증할 수 없고,
+            고객이 넣은 예약이 관리자 화면에 보이지 않습니다(크로스 디바이스 불가).
+          → 데이터베이스 + API로 교체해야 실제 운영이 가능합니다.
+            쿠폰 테이블 / 전화번호 인덱스 / 예약 테이블로 분리하세요.
+     [CN] 下面 3 个键都存在 localStorage = 仅在"这一台浏览器内"有效。
+          → 顾客手机上发行的优惠券无法在医院电脑上核验，
+            顾客提交的预约也不会出现在管理员界面（无法跨设备）。
+          → 必须改为 数据库 + 接口 才能正式上线。
+            拆分为 优惠券表 / 电话号索引 / 预约表。
+     ============================================================= */
   /* ---- localStorage 키 ---- */
   var K_COUPONS = "lp_coupons_v1";        // { CODE: { code, phone, issuedAt, used, usedAt, held, heldAt, hospital, name } }
   var K_PHONES  = "lp_phone_index_v1";    // { phone: CODE }  전화번호→코드(번호당 1회 발행)
@@ -75,7 +94,32 @@
   }
 
   /* =====================================================================
-     Store : 쿠폰/예약 데이터 접근 계층(교체 포인트)
+     Store : 쿠폰/예약 데이터 접근 계층(★ 백엔드 교체 포인트 / ★ 后端替换点)
+     ---------------------------------------------------------------------
+     [KO] 이 객체의 각 메서드가 그대로 백엔드 API 엔드포인트 명세가 됩니다.
+          내부의 jget/jset(localStorage) 호출만 fetch()로 바꾸면 됩니다.
+            issueCoupon     → POST   /api/coupons          (쿠폰 발행)
+            validateCoupon  → GET    /api/coupons/:code    (유효성 검사)
+            holdCoupon      → POST   /api/coupons/:code/hold     (사용 보류)
+            confirmCoupon   → POST   /api/coupons/:code/confirm  (사용 확정)
+            releaseCoupon   → POST   /api/coupons/:code/release  (보류 해제)
+            addReservation  → POST   /api/reservations     (예약 등록)
+            updateReservation → PATCH /api/reservations/:id (예약 갱신)
+            getReservations → GET    /api/reservations     (예약 목록)
+            getCoupons      → GET    /api/coupons          (쿠폰 목록)
+          ※ 코드 발행/검증은 반드시 서버에서 처리해야 위변조를 막을 수 있습니다.
+     [CN] 该对象的每个方法即是后端接口规范。只需把内部的
+          jget/jset(localStorage) 调用替换为 fetch() 即可：
+            issueCoupon     → POST   /api/coupons          (发行优惠券)
+            validateCoupon  → GET    /api/coupons/:code    (校验有效性)
+            holdCoupon      → POST   /api/coupons/:code/hold     (挂起待用)
+            confirmCoupon   → POST   /api/coupons/:code/confirm  (确认使用)
+            releaseCoupon   → POST   /api/coupons/:code/release  (释放挂起)
+            addReservation  → POST   /api/reservations     (新增预约)
+            updateReservation → PATCH /api/reservations/:id (更新预约)
+            getReservations → GET    /api/reservations     (预约列表)
+            getCoupons      → GET    /api/coupons          (优惠券列表)
+          ※ 编码的发行/校验必须在服务器完成，以防伪造。
      ===================================================================== */
   var Store = {
     /* 전화번호로 쿠폰 발행(번호당 1회까지) */
