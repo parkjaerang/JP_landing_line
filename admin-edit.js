@@ -1039,13 +1039,13 @@
     [".pkg_name", "프로그램명"],
     [".pkg_desc", "프로그램 설명"],
     [".pkg_steps li", "단계 설명"],
-    [".doctor_role", "직책 (예: 院長)"],
+    [".doctor_role", "직책 (예: 원장)"],
     [".doctor_name", "이름"],
     [".doctor_career li", "경력 한 줄"],
     ["figcaption", "설명"],
     [".ba_label", "라벨"],
     [".info_row dt", "요일"],
-    [".info_row dd", "診療時間"]
+    [".info_row dd", "진료시간"]
   ];
 
   /* 비우면 view에서 사라지는 선택 필드(cleanupEvent가 제거하는 대상) → 빈칸일 때
