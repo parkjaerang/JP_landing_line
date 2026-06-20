@@ -280,6 +280,11 @@
   function filterStatus() { var el = document.getElementById("rv-status"); return el ? el.value : ""; }
   function hospName(r) { return r.hospitalName || r.hospital || ""; }
 
+  /* 병원명 표시(HTML): Kleam 지점명(弘大店 / 明洞店)만 작게·진한 회색으로 */
+  function hospNameHtml(r) {
+    return esc(hospName(r)).replace(/(弘大店|明洞店)/g, "<span class='hosp-branch'>$1</span>");
+  }
+
   /* 병원 드롭다운 옵션을 데이터에서 동적 생성 */
   function buildHospitalOptions() {
     var sel = document.getElementById("rv-hospital");
@@ -337,7 +342,7 @@
         "<td class='col-date' data-label='" + esc(L.date) + "'>" + fmtDateLines(r.createdAt) + "</td>" +
         "<td data-label='" + esc(L.name) + "'>" + esc(r.name) + "</td>" +
         "<td data-label='" + esc(L.phone) + "'>" + esc(r.phone) + "</td>" +
-        "<td data-label='" + esc(L.hosp) + "'>" + esc(r.hospitalName || r.hospital) + "</td>" +
+        "<td data-label='" + esc(L.hosp) + "'>" + hospNameHtml(r) + "</td>" +
         "<td class='col-contact' data-label='" + esc(L.contact) + "'>" + contactCell(r) + "</td>" +
         "<td class='col-coupon' data-label='" + esc(L.coupon) + "'>" + couponCell(r) + "</td>" +
         "<td class='col-code' data-label='" + esc(L.code) + "'>" + (r.couponCode && !r.couponVoided ? "<code class='code'>" + esc(r.couponCode) + "</code>" : "—") + "</td>" +
