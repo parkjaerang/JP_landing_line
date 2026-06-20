@@ -10,13 +10,6 @@
 (function () {
   "use strict";
 
-  /* ★ 백엔드 전환 필요 (갤러리 썸네일) / ★ 需改造为后端（图库缩略图）
-     [KO] 카드 썸네일/로고를 base64로 localStorage에 저장 → 이 브라우저에서만 보이고
-          용량 한계가 있습니다. 이미지는 업로드 API로 보내 URL만 저장하고(GET/PUT
-          /api/gallery), load/save 두 함수만 fetch로 바꾸면 됩니다(교체 포인트).
-     [CN] 把卡片缩略图/Logo 以 base64 存进 localStorage → 仅本浏览器可见且有容量限制。
-          图片应通过上传接口保存 URL(GET/PUT /api/gallery)，只需把 load/save 两个
-          函数改为 fetch 即可（替换点）。 */
   var KEY = "lp_gallery_v1";
 
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
