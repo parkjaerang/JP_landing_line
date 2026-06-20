@@ -107,10 +107,13 @@
       buildHospitalOptions();
       render();
     });
-    // 연락 상태 토글(이벤트 위임)
+    // 연락 상태 토글 / 쿠폰 사용 취소(이벤트 위임)
     document.getElementById("rv-table").addEventListener("click", function (e) {
-      var btn = e.target.closest ? e.target.closest("button.cstat") : null;
-      if (btn) toggleContact(btn.getAttribute("data-id"));
+      if (!e.target.closest) return;
+      var cstat = e.target.closest("button.cstat");
+      if (cstat) { toggleContact(cstat.getAttribute("data-id")); return; }
+      var cvoid = e.target.closest("button.cvoid");
+      if (cvoid) { toggleCouponVoid(cvoid.getAttribute("data-id")); return; }
     });
     render();
   }
@@ -135,6 +138,8 @@
         r.couponConfirmed = !!(r.couponUsed && c && c.used);
         changed = true;
       }
+      // 쿠폰 사용 취소 상태: false | "manual"(관리자 수동 취소) | "auto"(타 병원 사용으로 자동 처리)
+      if (r.couponVoided === undefined) { r.couponVoided = false; changed = true; }
     });
     if (changed) { try { localStorage.setItem("lp_reservations_v1", JSON.stringify(list)); } catch (e) {} }
   }
@@ -152,8 +157,11 @@
       if (r.couponCode && !r.couponConfirmed) {
         Store.confirmCoupon(r.couponCode, { hospital: r.hospital, name: r.name });
         patch.couponConfirmed = true;
+        patch.couponVoided = false;   // 확정되면 취소 상태 해제
       }
       Store.updateReservation(id, patch);
+      // ★ 같은 쿠폰을 쓴 다른 "사용 예정" 예약은 자동으로 "사용 안함" 처리(쿠폰은 1인 1회·1院)
+      if (r.couponCode) voidOtherPending(r.couponCode, id);
     } else {
       // 통화완료 → 미연락: 쿠폰을 사용 전으로 되돌림
       if (r.couponCode && r.couponConfirmed &&
@@ -166,6 +174,69 @@
         patch2.couponConfirmed = false;
       }
       Store.updateReservation(id, patch2);
+      // ★ 자동으로 "사용 안함" 처리됐던 다른 예약을 "사용 예정"으로 복원
+      if (r.couponCode) restoreAutoVoided(r.couponCode, id);
+    }
+    render();
+  }
+
+  /* 같은 쿠폰 코드를 쓴 다른 "사용 예정" 예약을 "사용 안함(auto)"으로 자동 변경 */
+  function voidOtherPending(code, exceptId) {
+    Store.getReservations().forEach(function (o) {
+      if (o.id !== exceptId && o.couponCode === code && !o.couponConfirmed && !o.couponVoided) {
+        Store.updateReservation(o.id, { couponVoided: "auto" });
+      }
+    });
+  }
+
+  /* 자동(auto)으로 취소됐던 예약을 다시 "사용 예정"으로 복원(통화완료 취소 시) */
+  function restoreAutoVoided(code, exceptId) {
+    Store.getReservations().forEach(function (o) {
+      if (o.id !== exceptId && o.couponCode === code && o.couponVoided === "auto") {
+        Store.updateReservation(o.id, { couponVoided: false });
+      }
+    });
+  }
+
+  /* 같은 코드가 다른 예약에서 (취소되지 않고) 실제로 사용 확정됐는지 */
+  function couponConfirmedElsewhere(code, exceptId) {
+    var list = Store.getReservations();
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id !== exceptId && list[i].couponCode === code &&
+          list[i].couponConfirmed && !list[i].couponVoided) return true;
+    }
+    return false;
+  }
+
+  /* ---- 쿠폰 사용 취소 / 되돌리기 (사용 예정·사용 확정 ⇄ 사용 안함, 수동) ---- */
+  function toggleCouponVoid(id) {
+    var list = Store.getReservations();
+    var r = null;
+    for (var i = 0; i < list.length; i++) { if (list[i].id === id) { r = list[i]; break; } }
+    if (!r || !r.couponCode) return;
+    if (r.couponVoided === "auto") return; // 타 병원 사용으로 자동 처리된 건 수동 변경 불가
+
+    if (!r.couponVoided) {
+      // 사용 중(사용 예정 또는 통화완료·사용 확정) → 사용 안함(수동 취소)
+      if (!confirm(tr("이 예약의 쿠폰 사용을 취소하고 '사용 안함'으로 변경하시겠습니까?"))) return;
+      Store.updateReservation(id, { couponVoided: "manual" });
+      if (r.couponConfirmed) {
+        // 확정 상태였으면 쿠폰을 사용 해제 + 같은 코드의 자동 취소건을 사용 예정으로 복원
+        Store.releaseCoupon(r.couponCode);
+        restoreAutoVoided(r.couponCode, id);
+      }
+    } else {
+      // 사용 안함(수동) → 되돌리기. 단, 같은 코드가 이미 타 병원에서 사용 중이면 불가
+      if (couponConfirmedElsewhere(r.couponCode, id)) {
+        alert(tr("이 쿠폰은 이미 다른 병원에서 사용되어 되돌릴 수 없습니다."));
+        return;
+      }
+      Store.updateReservation(id, { couponVoided: false });
+      if (r.couponConfirmed) {
+        // 확정 상태로 되돌리는 경우: 쿠폰을 다시 사용 확정 + 같은 코드의 다른 예정건 자동 취소
+        Store.confirmCoupon(r.couponCode, { hospital: r.hospital, name: r.name });
+        voidOtherPending(r.couponCode, id);
+      }
     }
     render();
   }
@@ -232,8 +303,8 @@
     var resv = getResv();
     var coupons = getCoupons();
     var noContact = resv.filter(function (r) { return r.contactStatus !== "통화완료"; }).length;
-    var pending = resv.filter(function (r) { return r.couponCode && !r.couponConfirmed; }).length;
-    var confirmed = resv.filter(function (r) { return r.couponConfirmed; }).length;
+    var pending = resv.filter(function (r) { return r.couponCode && !r.couponConfirmed && !r.couponVoided; }).length;
+    var confirmed = resv.filter(function (r) { return r.couponConfirmed && !r.couponVoided; }).length;
     var box = document.getElementById("rv-stats");
     box.innerHTML =
       stat(resv.length, tr("예약 합계")) +
@@ -269,7 +340,7 @@
         "<td data-label='" + esc(L.hosp) + "'>" + esc(r.hospitalName || r.hospital) + "</td>" +
         "<td class='col-contact' data-label='" + esc(L.contact) + "'>" + contactCell(r) + "</td>" +
         "<td class='col-coupon' data-label='" + esc(L.coupon) + "'>" + couponCell(r) + "</td>" +
-        "<td class='col-code' data-label='" + esc(L.code) + "'>" + (r.couponCode ? "<code class='code'>" + esc(r.couponCode) + "</code>" : "—") + "</td>" +
+        "<td class='col-code' data-label='" + esc(L.code) + "'>" + (r.couponCode && !r.couponVoided ? "<code class='code'>" + esc(r.couponCode) + "</code>" : "—") + "</td>" +
         "</tr>";
     });
     html += "</tbody></table>";
@@ -286,11 +357,27 @@
            "</span>";
   }
 
-  /* 쿠폰 셀(사용 안함 / 사용 예정 / 사용 확정) */
+  /* 쿠폰 셀(사용 안함 / 사용 예정 / 사용 확정 / 취소) */
   function couponCell(r) {
     if (!r.couponCode) return "<span class='pill no'>" + tr("사용 안함") + "</span>";
-    if (r.couponConfirmed) return "<span class='pill use'>" + tr("5%OFF 사용") + "</span>";
-    return "<span class='pill pending'>" + tr("사용 예정") + "</span>";
+    if (r.couponVoided === "auto") {
+      // 타 병원에서 사용되어 자동으로 사용 안함(수동 변경 불가)
+      return "<span class='cstat-wrap'><span class='pill no'>" + tr("사용 안함") + "</span>" +
+             "<span class='cstat-at'>" + tr("타 병원 사용") + "</span></span>";
+    }
+    if (r.couponVoided === "manual") {
+      // 관리자가 취소함 → 되돌리기 버튼 제공
+      return "<span class='cstat-wrap'><span class='pill no'>" + tr("사용 안함") + "</span>" +
+             "<button class='cvoid' data-id='" + esc(r.id) + "'>" + tr("되돌리기") + "</button></span>";
+    }
+    if (r.couponConfirmed) {
+      // 사용 확정 → 통화완료 후에도 사용 취소 버튼 제공
+      return "<span class='cstat-wrap'><span class='pill use'>" + tr("쿠폰 사용") + "</span>" +
+             "<button class='cvoid' data-id='" + esc(r.id) + "'>" + tr("사용 취소") + "</button></span>";
+    }
+    // 사용 예정 → 사용 취소 버튼 제공
+    return "<span class='cstat-wrap'><span class='pill pending'>" + tr("사용 예정") + "</span>" +
+           "<button class='cvoid' data-id='" + esc(r.id) + "'>" + tr("사용 취소") + "</button></span>";
   }
 
   function renderCoupons() {
@@ -333,7 +420,10 @@
       name = "reservations.csv";
       lines.push([tr("일시"), tr("이름"), tr("전화번호"), tr("이용 병원"), tr("연락 상태"), tr("통화 일시"), tr("쿠폰"), tr("코드")].map(csvCell).join(","));
       getResv().forEach(function (r) {
-        var couponLabel = !r.couponCode ? tr("안함") : (r.couponConfirmed ? tr("사용 확정") : tr("사용 예정"));
+        var couponLabel = !r.couponCode ? tr("안함")
+          : r.couponVoided ? tr("안함")
+          : r.couponConfirmed ? tr("사용 확정")
+          : tr("사용 예정");
         lines.push([fmtDate(r.createdAt), r.name, r.phone, r.hospitalName || r.hospital,
           tr(r.contactStatus || "미연락"), fmtDate(r.contactedAt), couponLabel, r.couponCode || ""].map(csvCell).join(","));
       });
