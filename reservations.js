@@ -114,6 +114,8 @@
       if (cstat) { toggleContact(cstat.getAttribute("data-id")); return; }
       var cvoid = e.target.closest("button.cvoid");
       if (cvoid) { toggleCouponVoid(cvoid.getAttribute("data-id")); return; }
+      var rdel = e.target.closest("button.rdel");
+      if (rdel) { deleteReservation(rdel.getAttribute("data-id")); return; }
     });
     render();
   }
@@ -241,6 +243,23 @@
     render();
   }
 
+  /* ---- 예약 삭제 ---- */
+  function deleteReservation(id) {
+    var list = Store.getReservations();
+    var r = null;
+    for (var i = 0; i < list.length; i++) { if (list[i].id === id) { r = list[i]; break; } }
+    if (!r) return;
+    if (!confirm(tr("이 예약을 삭제하시겠습니까? 되돌릴 수 없습니다."))) return;
+    // 사용 확정된 쿠폰이 있으면 해제하고, 자동 취소됐던 다른 예약을 복원
+    if (r.couponCode && r.couponConfirmed && !r.couponVoided) {
+      Store.releaseCoupon(r.couponCode);
+      restoreAutoVoided(r.couponCode, id);
+    }
+    Store.deleteReservation(id);
+    buildHospitalOptions();
+    render();
+  }
+
   function fmtDate(iso) {
     if (!iso) return "";
     var d = new Date(iso);
@@ -335,7 +354,7 @@
       contact: tr("연락 상태"), coupon: tr("쿠폰"), code: tr("코드")
     };
     var html = "<table><thead><tr>" +
-      "<th class='col-date'>" + L.date + "</th><th>" + L.name + "</th><th>" + L.phone + "</th><th>" + L.hosp + "</th><th class='col-contact'>" + L.contact + "</th><th class='col-coupon'>" + L.coupon + "</th><th class='col-code'>" + L.code + "</th>" +
+      "<th class='col-date'>" + L.date + "</th><th>" + L.name + "</th><th>" + L.phone + "</th><th>" + L.hosp + "</th><th class='col-contact'>" + L.contact + "</th><th class='col-coupon'>" + L.coupon + "</th><th class='col-code'>" + L.code + "</th><th class='col-del'></th>" +
       "</tr></thead><tbody>";
     rows.forEach(function (r) {
       html += "<tr>" +
@@ -346,6 +365,7 @@
         "<td class='col-contact' data-label='" + esc(L.contact) + "'>" + contactCell(r) + "</td>" +
         "<td class='col-coupon' data-label='" + esc(L.coupon) + "'>" + couponCell(r) + "</td>" +
         "<td class='col-code' data-label='" + esc(L.code) + "'>" + (r.couponCode && !r.couponVoided ? "<code class='code'>" + esc(r.couponCode) + "</code>" : "—") + "</td>" +
+        "<td class='col-del'><button class='rdel' data-id='" + esc(r.id) + "' title='" + esc(tr("예약 삭제")) + "'>" + tr("삭제") + "</button></td>" +
         "</tr>";
     });
     html += "</tbody></table>";

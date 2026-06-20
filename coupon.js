@@ -236,6 +236,15 @@
       return changed;
     },
 
+    /* 예약 레코드를 id로 삭제 */
+    deleteReservation: function (id) {
+      var list = jget(K_RESV, []);
+      var next = list.filter(function (r) { return r.id !== id; });
+      if (next.length === list.length) return false;
+      jset(K_RESV, next);
+      return true;
+    },
+
     getReservations: function () { return jget(K_RESV, []); },
     getCoupons: function () {
       var obj = jget(K_COUPONS, {});
