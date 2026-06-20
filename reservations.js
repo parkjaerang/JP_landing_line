@@ -152,16 +152,16 @@
     if (!r) return;
     var done = r.contactStatus === "통화완료";
     if (!done) {
-      // 미연락 → 통화완료: 쿠폰이 있으면 사용 확정
+      // 미연락 → 통화완료: 쿠폰이 있고 사용 취소되지 않았으면 사용 확정
+      // (수동으로 '사용 안함' 처리한 건은 통화완료 후에도 그대로 유지)
       var patch = { contactStatus: "통화완료", contactedAt: new Date().toISOString() };
-      if (r.couponCode && !r.couponConfirmed) {
+      if (r.couponCode && !r.couponConfirmed && !r.couponVoided) {
         Store.confirmCoupon(r.couponCode, { hospital: r.hospital, name: r.name });
         patch.couponConfirmed = true;
-        patch.couponVoided = false;   // 확정되면 취소 상태 해제
       }
       Store.updateReservation(id, patch);
-      // ★ 같은 쿠폰을 쓴 다른 "사용 예정" 예약은 자동으로 "사용 안함" 처리(쿠폰은 1인 1회·1院)
-      if (r.couponCode) voidOtherPending(r.couponCode, id);
+      // ★ 실제로 사용 확정된 경우에만 같은 쿠폰을 쓴 다른 "사용 예정" 예약을 자동 "사용 안함" 처리(쿠폰은 1인 1회·1院)
+      if (r.couponCode && patch.couponConfirmed) voidOtherPending(r.couponCode, id);
     } else {
       // 통화완료 → 미연락: 쿠폰을 사용 전으로 되돌림
       if (r.couponCode && r.couponConfirmed &&
