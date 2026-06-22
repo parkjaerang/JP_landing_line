@@ -331,10 +331,7 @@
 
     function close() { mask.remove(); }
     box.querySelector(".cp-close").addEventListener("click", close);
-    mask.addEventListener("click", function (e) { if (e.target === mask) close(); });
-    document.addEventListener("keydown", function esc(e) {
-      if (e.key === "Escape") { close(); document.removeEventListener("keydown", esc); }
-    });
+    // 바깥 클릭/ESC로는 닫히지 않음 — 오직 X 버튼으로만 닫힌다
 
     var content = document.createElement("div");
     box.appendChild(content);
