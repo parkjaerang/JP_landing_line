@@ -272,6 +272,8 @@
       ".lp-tabadd:hover,.lp-subadd:hover{background:rgba(47,109,240,.18)}" +
       /* 탭 자체가 없는 섹션/패널에 노출되는 '구조 생성' 부트스트랩 버튼(중앙 블록) */
       "html.lp-admin #procedure_type .lp-tabboot,html.lp-admin #procedure_type .lp-subboot{display:block;width:max-content;max-width:calc(100% - 32px);margin:14px auto;align-self:auto}" +
+      /* 상위탭 만들기 버튼 아래 안내문구: 탭 없이 시술만 추가해도 된다는 설명(편집 대상 아님) */
+      "html.lp-admin #procedure_type .lp-tabnote{display:block;width:max-content;max-width:calc(100% - 32px);margin:-6px auto 4px;padding:0 4px;color:#6b7077;font-size:12px;font-family:system-ui,sans-serif;text-align:center;line-height:1.45}" +
       /* shorts_grid가 justify-items:center + 2열(wooa)이면 에디터가 콘텐츠 폭으로 줄어 '유튜브 추가'가 줄바꿈됨
          → 모든 열을 가로질러(span) 폭을 채우게 해 링크 0개여도 긴 형태 유지 */
       ".lp-shorts-editor{display:flex;flex-direction:column;gap:10px;padding:0 16px;max-width:640px;margin:0 auto;grid-column:1/-1;justify-self:stretch;width:100%;box-sizing:border-box}" +
@@ -1541,9 +1543,19 @@
       var tb = bootBtn("lp-tabboot", tr("＋ 상위탭 만들기"), function () {
         createTabStructure(root);
       });
+      var note = document.createElement("p");
+      note.className = "lp-tabnote";
+      note.setAttribute("data-lp-ec", "1");
+      note.setAttribute("contenteditable", "false");
+      note.textContent = tr("상위탭은 선택 사항입니다. 만들지 않고 아래 「＋ 시술 추가」로 시술 항목만 추가해도 됩니다.");
       var rootTitle = directChildren(root, ".section_title")[0];
-      if (rootTitle) root.insertBefore(tb, rootTitle.nextSibling);
-      else root.insertBefore(tb, root.firstChild);
+      if (rootTitle) {
+        root.insertBefore(tb, rootTitle.nextSibling);
+        root.insertBefore(note, tb.nextSibling);
+      } else {
+        root.insertBefore(tb, root.firstChild);
+        root.insertBefore(note, tb.nextSibling);
+      }
     }
     // 서브탭 없는 각 패널 → '하위탭 만들기' 버튼(패널 맨 위)
     qa(".panel", root).forEach(function (panel) {
