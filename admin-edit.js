@@ -1547,7 +1547,7 @@
       note.className = "lp-tabnote";
       note.setAttribute("data-lp-ec", "1");
       note.setAttribute("contenteditable", "false");
-      note.textContent = tr("상위탭은 선택 사항입니다. 만들지 않고 아래 「＋ 시술 추가」로 시술 항목만 추가해도 됩니다.");
+      note.innerHTML = tr("상위탭은 선택 사항입니다. / 만들지 않고 아래 「＋ 시술 추가」로 시술 항목만 추가해도 됩니다.").replace(/\s*\/\s*/, "<br>");
       var rootTitle = directChildren(root, ".section_title")[0];
       if (rootTitle) {
         root.insertBefore(tb, rootTitle.nextSibling);
