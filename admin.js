@@ -89,8 +89,9 @@
   function enterAdmin() { enterAdminImpl(); }
   function enterAdminImpl() {
     addAdminBar();
-    addEditButtons();
+    // addEditButtons();
     addThumbEditors();
+    makeCardOpenEditor();
   }
 
   /* ---- 상단 바(로그아웃) ---- */
@@ -112,27 +113,40 @@
     });
   }
 
-  /* ---- 각 카드에 편집 버튼 ---- */
-  function addEditButtons() {
-    var cards = document.querySelectorAll(".gallery .card");
-    cards.forEach(function (card) {
-      if (card.querySelector(".admin-edit-btn")) return;
-      var href = card.getAttribute("href");
-      if (!href) return;
-      var thumb = card.querySelector(".card-thumb") || card;
-      thumb.style.position = "relative";
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "admin-edit-btn";
-      btn.textContent = tr("✏️ 페이지 편집");
-      btn.addEventListener("click", function (e) {
-        e.preventDefault(); e.stopPropagation();
-        var url = href + (href.indexOf("?") === -1 ? "?" : "&") + "admin=1";
-        window.open(url, "_blank");
-      });
-      thumb.appendChild(btn);
-    });
-  }
+  // /* ---- 각 카드에 편집 버튼 ---- */
+  // function addEditButtons() {
+  //   // var cards = document.querySelectorAll(".gallery .card");
+  //   // cards.forEach(function (card) {
+  //   //   if (card.querySelector(".admin-edit-btn")) return;
+  //   //   var href = card.getAttribute("href");
+  //   //   if (!href) return;
+  //   //   var thumb = card.querySelector(".card-thumb") || card;
+  //   //   thumb.style.position = "relative";
+  //   //   var btn = document.createElement("button");
+  //   //   btn.type = "button";
+  //   //   btn.className = "admin-edit-btn";
+  //   //   btn.textContent = tr("✏️ 페이지 편집");
+  //   //   btn.addEventListener("click", function (e) {
+  //   //     e.preventDefault(); e.stopPropagation();
+  //   //     var url = href + (href.indexOf("?") === -1 ? "?" : "&") + "admin=1";
+  //   //     window.open(url, "_blank");
+  //   //   });
+  //   //   thumb.appendChild(btn);
+  //   // });
+  // }
+
+  function makeCardOpenEditor() {
+  document.querySelectorAll(".gallery .card").forEach(function(card){
+
+    var href = card.getAttribute("href");
+    if (!href) return;
+
+    card.setAttribute(
+      "href",
+      href + (href.indexOf("?") === -1 ? "?" : "&") + "admin=1"
+    );
+  });
+}
 
   /* ---- 각 카드 썸네일 변경(이미지 교체) ---- */
   function addThumbEditors() {
