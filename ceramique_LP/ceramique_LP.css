@@ -44,11 +44,14 @@ img{
     background-repeat: no-repeat;
     opacity: 0;
     z-index: 0;
-    transition: opacity 1.5s ease-in-out;
+    /* 사라질 때: 지연 없이 바로 페이드아웃 */
+    transition: opacity 0.9s ease-in-out;
 }
 
 #hero_intro .hero_bg.is-active{
     opacity: 1;
+    /* 나타날 때: 이전 장이 다 사라진 뒤(0.9s 지연) 페이드인 → 겹침 없음 */
+    transition: opacity 0.9s ease-in-out 0.9s;
 }
 
 #hero_intro::after{
