@@ -220,6 +220,7 @@
       "html.lp-admin [contenteditable='true'][data-ph]:empty::before{content:attr(data-ph);}" +
       /* ×버튼 등을 자식으로 가져 :empty가 깨지는 칸(소제목): .lp-ph일 때 placeholder 표시 */
       "html.lp-admin [contenteditable='true'][data-ph].lp-ph::before{content:attr(data-ph);pointer-events:none}" +
+      "html.lp-admin .savebtn{padding : 9px 14px;}"+
       /* 클릭 요소는 pointer 커서(편집용 텍스트 커서보다 우선) */
       "html.lp-admin a,html.lp-admin button,html.lp-admin [role='button'],html.lp-admin .tab,html.lp-admin .subtab,html.lp-admin .plan-switch-btn,html.lp-admin .faq_q,html.lp-admin .faq_arrow,html.lp-admin .line_btn,html.lp-admin label,html.lp-admin select,html.lp-admin summary,html.lp-admin .swiper-button-next,html.lp-admin .swiper-button-prev{cursor:pointer!important}" +
       "html.lp-admin .lp-item{position:relative}" +
@@ -231,7 +232,6 @@
       /* 원장 경력 줄(.doctor_career li): ×버튼이 텍스트를 가리지 않게 우측 여백 확보 + 줄 세로 중앙 정렬 */
       "html.lp-admin .doctor_career li.lp-item{padding-right:34px}" +
       "html.lp-admin .doctor_career li.lp-item > .lp-del{top:50%;transform:translateY(-50%);width:22px;height:22px;font-size:13px}" +
-      "html.lp-admin button {padding : 9px 14px;}"+
       /* 진료시간 행: × 삭제 버튼을 우측 세로중앙에(시간 텍스트와 겹치지 않게 우측 여백 확보) */
       "html.lp-admin .info_row.lp-item{padding-right:34px}" +
       "html.lp-admin .info_row.lp-item > .lp-del{top:50%;transform:translateY(-50%);width:22px;height:22px;font-size:13px}" +
@@ -310,7 +310,7 @@
       "<select class='ghost lp-lang' data-act='lang'>" + langOptionsHTML() + "</select>" +
       "<button class='ghost' data-act='preview'>" + tr("미리보기") + "</button>" +
       "<button class='warn' data-act='reset'>" + tr("변경 취소") + "</button>" +
-      "<button data-act='save'>" + tr("저장") + "</button>" +
+      "<button class='savebtn' data-act='save'>" + tr("저장") + "</button>" +
       "<button class='ghost' data-act='exit'>" + tr("종료") + "</button>";
     document.body.appendChild(bar);
     var langSel = bar.querySelector("select[data-act='lang']");
