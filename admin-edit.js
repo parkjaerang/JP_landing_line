@@ -1906,7 +1906,7 @@
     if (q(SHORTS_GRID)) ov.shorts = collectShorts();
     var ok = saveOverride(ov);
     OVERRIDE = ov;
-    toast(ok ? tr("✅ 저장했습니다 (이 브라우저에 저장됨)") : tr("⚠️ 저장 실패 (용량 초과 가능성)"));
+    toast(ok ? tr("✅ 저장했습니다 (이 브라우저에 저장됨)") : tr("⚠️ 저장 실패 (용량 초과 가능성)"));  
   }
 
   function doReset() {
