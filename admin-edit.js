@@ -231,7 +231,7 @@
       /* 원장 경력 줄(.doctor_career li): ×버튼이 텍스트를 가리지 않게 우측 여백 확보 + 줄 세로 중앙 정렬 */
       "html.lp-admin .doctor_career li.lp-item{padding-right:34px}" +
       "html.lp-admin .doctor_career li.lp-item > .lp-del{top:50%;transform:translateY(-50%);width:22px;height:22px;font-size:13px}" +
-      "html.lp-admin button {padding : 9px 14px;}"
+      "html.lp-admin button {padding : 9px 14px;}"+
       /* 진료시간 행: × 삭제 버튼을 우측 세로중앙에(시간 텍스트와 겹치지 않게 우측 여백 확보) */
       "html.lp-admin .info_row.lp-item{padding-right:34px}" +
       "html.lp-admin .info_row.lp-item > .lp-del{top:50%;transform:translateY(-50%);width:22px;height:22px;font-size:13px}" +
