@@ -42,7 +42,7 @@ img{
     z-index: 0;
 }
 
-#hero_intro .hero_slide{
+#hero_intro .hero_bg{
     position: absolute;
     top: 0;
     left: 0;
@@ -50,20 +50,18 @@ img{
     height: 100%;
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
     opacity: 0;
-    animation: heroFade 18s infinite;
+    z-index: 0;
+    /* 사라질 때: 지연 없이 바로 페이드아웃 */
+    transition: opacity 0.9s ease-in-out;
 }
 
-#hero_intro .hero_slide:nth-child(1){ animation-delay: 0s; }
-#hero_intro .hero_slide:nth-child(2){ animation-delay: 6s; }
-#hero_intro .hero_slide:nth-child(3){ animation-delay: 12s; }
-
-@keyframes heroFade{
-    0%    { opacity: 0; }
-    5.5%  { opacity: 1; }
-    33.3% { opacity: 1; }
-    38.8% { opacity: 0; }
-    100%  { opacity: 0; }
+/* 활성 슬라이드만 노출 — common.js가 3초마다 is-active를 옮긴다.
+   나타날 때: 이전 장이 다 사라진 뒤(0.9s 지연) 페이드인 → 겹침 없음 */
+#hero_intro .hero_bg.is-active{
+    opacity: 1;
+    transition: opacity 0.9s ease-in-out 0.9s;
 }
 
 #hero_intro::after{

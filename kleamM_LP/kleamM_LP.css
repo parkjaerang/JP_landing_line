@@ -334,6 +334,7 @@ img{
 .info_note{
     color: var(--hover);
     font-size: 10px;
+    margin-top: 8px;
 }
 
 .footer_name{
