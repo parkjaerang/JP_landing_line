@@ -201,10 +201,10 @@
     s.id = "lp-editor-style";
     s.textContent =
       ".lp-toolbar{position:fixed;top:0;left:0;right:0;z-index:99999;display:flex;gap:8px;align-items:center;" +
-      "padding:8px 14px;background:#1a1c1f;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.25)}" +
+      "padding:9px 18px;background:#1a1c1f;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.25)}" +
       ".lp-toolbar .lp-title{font-weight:700}.lp-toolbar .lp-key{opacity:.6;font-size:11px}.lp-toolbar .lp-sp{flex:1}" +
       ".lp-toolbar button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#2f6df0;color:#fff;font-weight:600}" +
-      ".lp-toolbar button.ghost{background:#3a3d42}.lp-toolbar button.warn{background:#e8553b}" +
+      ".lp-toolbar button.ghost{background:#3a3d42; padding:9px 14px;}.lp-toolbar button.warn{background:#e8553b; padding: 9px 14px;}" +
       ".lp-toolbar select.lp-lang{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#3a3d42;color:#fff;font-weight:600}" +
       ".lp-toolbar select.lp-lang option{color:#1a1c1f;background:#fff}" +
       "html.lp-admin body{padding-top:54px!important}" +
@@ -231,6 +231,7 @@
       /* 원장 경력 줄(.doctor_career li): ×버튼이 텍스트를 가리지 않게 우측 여백 확보 + 줄 세로 중앙 정렬 */
       "html.lp-admin .doctor_career li.lp-item{padding-right:34px}" +
       "html.lp-admin .doctor_career li.lp-item > .lp-del{top:50%;transform:translateY(-50%);width:22px;height:22px;font-size:13px}" +
+      "html.lp-admin button {padding : 9px 14px;}"
       /* 진료시간 행: × 삭제 버튼을 우측 세로중앙에(시간 텍스트와 겹치지 않게 우측 여백 확보) */
       "html.lp-admin .info_row.lp-item{padding-right:34px}" +
       "html.lp-admin .info_row.lp-item > .lp-del{top:50%;transform:translateY(-50%);width:22px;height:22px;font-size:13px}" +
