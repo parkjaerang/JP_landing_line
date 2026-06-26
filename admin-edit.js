@@ -309,7 +309,7 @@
       "<span class='lp-sp'></span>" +
       "<select class='ghost lp-lang' data-act='lang'>" + langOptionsHTML() + "</select>" +
       "<button class='ghost' data-act='preview'>" + tr("미리보기") + "</button>" +
-      "<button class='warn' data-act='reset'>" + tr("변경 취소") + "</button>" +
+      // "<button class='warn' data-act='reset'>" + tr("변경 취소") + "</button>" +
       "<button class='savebtn' data-act='save'>" + tr("저장") + "</button>" +
       "<button class='ghost' data-act='exit'>" + tr("종료") + "</button>";
     document.body.appendChild(bar);

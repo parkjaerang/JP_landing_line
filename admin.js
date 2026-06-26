@@ -113,26 +113,26 @@
     });
   }
 
-  // /* ---- 각 카드에 편집 버튼 ---- */
+  /* ---- 각 카드에 편집 버튼 ---- */
   // function addEditButtons() {
-  //   // var cards = document.querySelectorAll(".gallery .card");
-  //   // cards.forEach(function (card) {
-  //   //   if (card.querySelector(".admin-edit-btn")) return;
-  //   //   var href = card.getAttribute("href");
-  //   //   if (!href) return;
-  //   //   var thumb = card.querySelector(".card-thumb") || card;
-  //   //   thumb.style.position = "relative";
-  //   //   var btn = document.createElement("button");
-  //   //   btn.type = "button";
-  //   //   btn.className = "admin-edit-btn";
-  //   //   btn.textContent = tr("✏️ 페이지 편집");
-  //   //   btn.addEventListener("click", function (e) {
-  //   //     e.preventDefault(); e.stopPropagation();
-  //   //     var url = href + (href.indexOf("?") === -1 ? "?" : "&") + "admin=1";
-  //   //     window.open(url, "_blank");
-  //   //   });
-  //   //   thumb.appendChild(btn);
-  //   // });
+  //   var cards = document.querySelectorAll(".gallery .card");
+  //   cards.forEach(function (card) {
+  //     if (card.querySelector(".admin-edit-btn")) return;
+  //     var href = card.getAttribute("href");
+  //     if (!href) return;
+  //     var thumb = card.querySelector(".card-thumb") || card;
+  //     thumb.style.position = "relative";
+  //     var btn = document.createElement("button");
+  //     btn.type = "button";
+  //     btn.className = "admin-edit-btn";
+  //     btn.textContent = tr("✏️ 페이지 편집");
+  //     btn.addEventListener("click", function (e) {
+  //       e.preventDefault(); e.stopPropagation();
+  //       var url = href + (href.indexOf("?") === -1 ? "?" : "&") + "admin=1";
+  //       window.open(url, "_blank");
+  //     });
+  //     thumb.appendChild(btn);
+  //   });
   // }
 
   function makeCardOpenEditor() {
