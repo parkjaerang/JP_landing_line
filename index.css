@@ -297,12 +297,118 @@ body {
 
 /* ===== Footer ===== */
 .site-footer {
+    width: 100%;
+    box-sizing: border-box;
     border-top: 1px solid var(--line);
-    padding: 28px 24px;
-    text-align: center;
+    background: var(--surface);
+    margin-top: 48px;
     color: var(--ink-sub);
     font-size: 13px;
     font-weight: 300;
+}
+
+.footer-inner {
+    padding: 48px 48px 32px;
+}
+
+.footer-brand {
+    margin-bottom: 36px;
+}
+
+.footer-brand-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: .02em;
+    margin-bottom: 4px;
+}
+
+.footer-brand-desc {
+    font-size: 12px;
+    color: var(--ink-sub);
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+    gap: 32px 40px;
+    margin-bottom: 36px;
+    padding-bottom: 36px;
+    border-bottom: 1px solid var(--line);
+}
+
+.footer-col-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+}
+
+.footer-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.footer-list li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.footer-key {
+    flex-shrink: 0;
+    min-width: 80px;
+    font-size: 12px;
+    color: var(--ink-sub);
+    font-weight: 400;
+}
+
+.footer-val {
+    font-size: 12px;
+    color: var(--ink);
+    font-weight: 400;
+}
+
+.footer-val a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.footer-val a:hover {
+    text-decoration: underline;
+}
+
+.footer-links a {
+    font-size: 12px;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: var(--accent);
+}
+
+.footer-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.footer-copy {
+    font-size: 12px;
+    color: var(--ink-sub);
+    font-weight: 400;
+}
+
+.footer-note {
+    font-size: 11px;
+    color: var(--ink-sub);
+    opacity: .7;
+    line-height: 1.6;
 }
 
 /* ===== Responsive ===== */
@@ -329,5 +435,14 @@ body {
 @media (max-width: 560px) {
     .site-header {
         padding: 48px 20px 28px;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .footer-inner {
+        padding: 36px 24px 28px;
     }
 }
