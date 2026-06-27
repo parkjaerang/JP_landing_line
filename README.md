@@ -39,85 +39,150 @@ JP_landing-line/
     └── wooa_LP_img/
 ```
 
-## 구현된 API
+## 백엔드 전환이 필요한 API 목록
 
-### 인증
-```
-- `POST /api/auth/login` (비밀번호/계정 → 세션 토큰 또는 httpOnly 쿠키, JWT)
-- `POST /api/auth/logout`
-- `GET /api/auth/me` (세션 검증)
-- 비밀번호 하드코딩 부분 변경
-- 아래 **모든 관리자용 API**(예약·쿠폰 확정·콘텐츠 편집)는 이 인증으로 보호
-```
+> 현재는 모든 데이터가 **localStorage(해당 브라우저 1대 안)** 에만 저장됩니다.
+> 각 파일에 `백엔드 전환 부분`을 주석으로 표시되어 있습니다.
+
+---
+
+### 1. 인증 — `admin.js`, `reservations.js`
+> 비밀번호(`admin1234`)가 JS 소스에 평문 노출. 인증 상태는 `localStorage["lp_admin_authed"]`
+
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
-| POST | `/api/admin/login` | 어드민 로그인 |
+| POST | `/api/auth/login` | 로그인 (비밀번호 → 세션 토큰 또는 httpOnly 쿠키) |
+| POST | `/api/auth/logout` | 로그아웃 |
+| GET | `/api/auth/me` | 세션 검증 |
 
-### 콘텐츠
+---
+
+### 2. 쿠폰 — `coupon.js` > `Store` 객체
+> `coupon.js`의 `Store` 객체 메서드가 그대로 API 스펙입니다.
+
 ```
-admin-edit.js는 각 LP의 섹션(hero / signature / event / doctors / info / ba)을 innerHTML 
-통째로 스냅샷( 저장 쇼츠(YouTube), 지도 주소도 포함)해서 lp_override_v1::<페이지키>에
+데이터 모델: Coupon {
+  code      : string   // 6자리 영숫자 (O/0/I/1 제외)
+  phone     : string   // 발급 전화번호 (숫자만)
+  issuedAt  : ISO8601
+  used      : boolean
+  usedAt    : ISO8601 | ""
+  held      : boolean
+  heldAt    : ISO8601 | ""
+  hospital  : string   // 페이지키 (예: wooa_LP)
+  name      : string   // 예약자 이름
+}
 ```
+
+| Method | Endpoint | 설명 | 현재 메서드 |
+| --- | --- | --- | --- |
+| POST | `/api/coupons` | 쿠폰 발행 (전화번호당 1회) | `issueCoupon` |
+| GET | `/api/coupons/:code` | 쿠폰 유효성 검사 | `validateCoupon` |
+| GET | `/api/coupons` | 쿠폰 전체 목록 | `getCoupons` |
+| POST | `/api/coupons/:code/hold` | 예약 신청 시 사용 보류 | `holdCoupon` |
+| POST | `/api/coupons/:code/confirm` | 통화완료 후 사용 확정 | `confirmCoupon` |
+| POST | `/api/coupons/:code/release` | 통화완료 취소 → 보류 복원 | `releaseCoupon` |
+| DELETE | `/api/coupons` | 쿠폰 전체 삭제 (관리자 전용) | — |
+
+---
+
+### 3. 예약 — `coupon.js` > `Store` 객체, `reservations.js`
+```
+데이터 모델: Reservation {
+  id              : string              // createdAt + 랜덤 suffix
+  name            : string
+  phone           : string
+  hospital        : string              // 페이지키
+  hospitalName    : string              // 표시용 이름
+  couponUsed      : boolean             // 신청 시 쿠폰 입력 여부
+  couponConfirmed : boolean             // 통화완료 후 실제 사용 확정 여부
+  couponVoided    : false | "manual" | "auto"
+  couponCode      : string | ""
+  contactStatus   : "미연락" | "통화완료"
+  contactedAt     : ISO8601 | ""
+  createdAt       : ISO8601
+}
+```
+
+| Method | Endpoint | 설명 | 현재 메서드 |
+| --- | --- | --- | --- |
+| POST | `/api/reservations` | 예약 등록 | `addReservation` |
+| PATCH | `/api/reservations/:id` | 예약 부분 갱신 | `updateReservation` |
+| GET | `/api/reservations` | 예약 전체 목록 | `getReservations` |
+| DELETE | `/api/reservations/:id` | 예약 1건 삭제 | `deleteReservation` |
+| DELETE | `/api/reservations` | 예약 전체 삭제 (관리자 전용) | — |
+
+---
+
+### 4. 페이지 콘텐츠 (CMS) — `admin-edit.js`
+> 관리자가 편집·저장해도 `localStorage`에만 기록되어 실제 방문자에게 반영되지 않음.
+저장 대상 섹션: `hero`, `signature`, `event(요금표)`, `doctors`, `info(병원정보)`, `ba(Before&After)`, `footer`, `shorts(YouTube)`
+
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
-| GET | `/api/pages/:pageKey/content` | 페이지 콘텐츠 불러오기 |
-| PUT | `/api/pages/:pageKey/content` | 페이지 콘텐츠 저장 |
-| GET | `/api/gallery` | 갤러리 조회 |
-| PUT | `/api/gallery` | 갤러리 저장 |
-| GET | `/api/hospitals` | 병원 설정 조회 |
+| GET | `/api/pages/:pageKey/content` | LP 페이지 콘텐츠 불러오기 |
+| PUT | `/api/pages/:pageKey/content` | LP 페이지 콘텐츠 저장 |
 
-### 예약
-```
-데이터 모델 (coupon.js): `Reservation { id, name, phone, hospital(페이지키), hospitalName,
-              couponUsed(신청 시 입력), couponConfirmed(통화 후 확정),
-              couponCode, contactStatus("미연락"|"통화완료"),
-              contactedAt, createdAt }`
-```
+---
+
+### 5. 갤러리 썸네일 — `gallery-edit.js`
+> 카드 썸네일/로고를 base64로 localStorage에 저장
+
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
-| POST | `/api/reservations` | 예약 등록 |
-| PATCH | `/api/reservations/:id` | 예약 갱신 |
-| GET | `/api/reservations` | 예약 목록 |
-| DELETE | `/api/reservations` | 예약 전체 삭제 |
+| GET | `/api/gallery` | 갤러리 카드 썸네일·로고 URL 조회 |
+| PUT | `/api/gallery` | 갤러리 카드 썸네일·로고 URL 저장 |
 
-### 쿠폰
-```
-coupon.js의 `Store` 객체가 그대로 API 스펙
-데이터 모델: `Coupon { code(6자리, O/0/I/1 제외), phone, issuedAt,
-         used, usedAt, held, heldAt, hospital, name }`
-```
+---
+
+### 6. 이미지 업로드 — `admin-edit.js`, `admin.js`
+> 이미지를 base64(dataURL)로 읽어 HTML에 그대로 박아 저장 → localStorage 5MB 금방 초과.
+
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
-| POST | `/api/coupons` | 쿠폰 발행 |
-| GET | `/api/coupons/:code` | 쿠폰 유효성 검사 |
-| GET | `/api/coupons` | 쿠폰 목록 |
-| POST | `/api/coupons/:code/hold` | 사용 보류 |
-| POST | `/api/coupons/:code/confirm` | 사용 확정 |
-| POST | `/api/coupons/:code/release` | 보류 해제 |
-| DELETE | `/api/coupons` | 쿠폰 전체 삭제 |
+| POST | `/api/upload` | 이미지 파일 업로드 → CDN/스토리지 URL 반환 |
 
-### 업로드
+---
+
+### 7. 병원 설정 (낮은 우선순위) — `coupon.js` > `LINE_CONFIG`
+> 병원별 LINE URL / OA ID가 코드에 하드코딩되어 있음.
+
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
-| POST | `/api/upload` | 이미지 파일 업로드 |
+| GET | `/api/hospitals` | 병원별 LINE 설정 조회 |
+| PUT | `/api/hospitals/:key` | 병원 LINE 설정 저장 |
 
-###### 교체가 필요한 파일 : coupon.js, admin.js, admin-edit.js, gallery-edit.js, reservations.js — 각 파일에 localStorage → fetch() 교체 포인트가 주석으로 표시
+---
+
+**교체가 필요한 파일 요약:**
+
+| 파일 | 교체 포인트 |
+| --- | --- |
+| `coupon.js` | `Store` 객체 전체 (쿠폰·예약), `LINE_CONFIG` |
+| `admin.js` | 로그인 인증, 이미지 업로드 |
+| `admin-edit.js` | `loadOverride` / `saveOverride`, `pickImage` |
+| `gallery-edit.js` | `load` / `save` |
+| `reservations.js` | 로그인 인증 |
+
+---
 
 ## 전체 구조
+
 | 페이지 | 역할 | 백엔드 의존 데이터 |
 | --- | --- | --- |
-| index.html | 갤러리 + 쿠폰 발급 팝업 | 쿠폰 발급, 갤러리 썸네일 |
-| 6개 landing page (`wooa/kleamH/kleamM/classone/ceramique/lovae`) | 랜딩 + LINE 예약 모달 | 예약 접수, 쿠폰 검증, 콘텐츠 오버라이드 |
-| admin.html | 관리자 로그인 + 편집 진입 | 인증, 콘텐츠/썸네일 편집 |
-| reservations.html | 예약·쿠폰 명단 | 예약/쿠폰 조회·갱신·통계 |
+| `index.html` | 갤러리 + 쿠폰 발급 팝업 | 쿠폰 발급, 갤러리 썸네일 |
+| `wooa/kleamH/kleamM/classone/ceramique/lovae` | 랜딩 + LINE 예약 모달 | 예약 접수, 쿠폰 검증, 콘텐츠 오버라이드 |
+| `admin.html` | 관리자 로그인 + 편집 진입 | 인증, 콘텐츠/썸네일 편집 |
+| `reservations.html` | 예약·쿠폰 명단 | 예약/쿠폰 조회·갱신·통계 |
 
-### 현재 사용 중인 저장소 키 (= 백엔드 테이블로 전환 대상):
+## 현재 사용 중인 localStorage 키 (= 백엔드 전환 대상)
+
 | localStorage 키 | 내용 | 파일 |
 | --- | --- | --- |
-| `lp_admin_authed` | 관리자 로그인 플래그 | admin.js, reservations.js |
-| `lp_coupons_v1` | 쿠폰 전체 | coupon.js |
-| `lp_phone_index_v1` | 전화번호→쿠폰코드 (1번호 1발급) | coupon.js |
-| `lp_reservations_v1` | 예약 명단 | coupon.js |
-| `lp_override_v1::<페이지키>` | LP 섹션별 콘텐츠 편집본 | admin-edit.js |
-| `lp_gallery_v1` | 갤러리 카드 썸네일/로고 | gallery-edit.js |
-| `lp_coupon_popup_seen` | 팝업 1회 노출 (sessionStorage, 그대로 둬도 무방) | coupon.js |
+| `lp_admin_authed` | 관리자 로그인 플래그 | `admin.js`, `reservations.js` |
+| `lp_coupons_v1` | 쿠폰 전체 | `coupon.js` |
+| `lp_phone_index_v1` | 전화번호→쿠폰코드 (1번호 1발급) | `coupon.js` |
+| `lp_reservations_v1` | 예약 명단 | `coupon.js` |
+| `lp_override_v1::<페이지키>` | LP 섹션별 콘텐츠 편집본 | `admin-edit.js` |
+| `lp_gallery_v1` | 갤러리 카드 썸네일/로고 | `gallery-edit.js` |
+| `lp_coupon_hide_today` | 팝업 오늘 하루 안보기 (그대로 둬도 무방) | `coupon.js` |
