@@ -205,7 +205,7 @@
       ".lp-toolbar .lp-title{font-weight:700}.lp-toolbar .lp-key{opacity:.6;font-size:11px}.lp-toolbar .lp-sp{flex:1}" +
       ".lp-toolbar button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#2f6df0;color:#fff;font-weight:600}" +
       ".lp-toolbar button.ghost{background:#3a3d42; padding:9px 14px;}.lp-toolbar button.warn{background:#e8553b; padding: 9px 14px;}" +
-      ".lp-toolbar select.lp-lang{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#3a3d42;color:#fff;font-weight:600}" +
+      ".lp-toolbar select.lp-lang{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:7px 14px;background:#3a3d42;color:#fff;font-weight:600;-webkit-appearance:none;appearance:none}" +
       ".lp-toolbar select.lp-lang option{color:#1a1c1f;background:#fff}" +
       "html.lp-admin body{padding-top:54px!important}" +
       /* 편집 모드: 콘텐츠의 hover/전환/애니메이션 비활성화(편집 UI[data-lp-ec]는 제외) */
