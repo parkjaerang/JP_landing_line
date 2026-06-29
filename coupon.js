@@ -347,7 +347,7 @@
       "<span class='cp-badge'>初回限定</span>" +
       "<h3>このページから LINE で予約すると<br><b>5％OFF</b> クーポンプレゼント</h3>" +
       "<p class='cp-sub'>電話番号を入力するとクーポンコードを発行します。<br>" +
-      "クーポンは<b>お一人様1回・1院のみ</b>ご利用いただけます。</p>" +
+      "クーポンは提携クリニックのうち、1か所でのみ1回ご利用いただけます。</p>" +
       "<div class='cp-field'><label>電話番号</label>" +
       "<input type='tel' id='cp-phone' inputmode='numeric' placeholder='' autocomplete='tel'></div>" +
       "<button class='cp-btn' id='cp-issue'>クーポンを受け取る</button>" +

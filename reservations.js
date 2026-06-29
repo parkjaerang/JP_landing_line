@@ -107,13 +107,13 @@
       buildHospitalOptions();
       render();
     });
-    // 연락 상태 토글 / 쿠폰 사용 취소(이벤트 위임)
+    // 연락 상태 토글 / 쿠폰 사용 토글(이벤트 위임)
     document.getElementById("rv-table").addEventListener("click", function (e) {
       if (!e.target.closest) return;
       var cstat = e.target.closest("button.cstat");
-      if (cstat) { toggleContact(cstat.getAttribute("data-id")); return; }
-      var cvoid = e.target.closest("button.cvoid");
-      if (cvoid) { toggleCouponVoid(cvoid.getAttribute("data-id")); return; }
+      if (cstat && !cstat.disabled) { toggleContact(cstat.getAttribute("data-id")); return; }
+      var cpstat = e.target.closest("button.cpstat");
+      if (cpstat && !cpstat.disabled) { toggleCoupon(cpstat.getAttribute("data-id")); return; }
       var rdel = e.target.closest("button.rdel");
       if (rdel) { deleteReservation(rdel.getAttribute("data-id")); return; }
     });
@@ -146,7 +146,7 @@
     if (changed) { try { localStorage.setItem("lp_reservations_v1", JSON.stringify(list)); } catch (e) {} }
   }
 
-  /* ---- 연락 상태 전환(클릭 토글) ---- */
+  /* ---- 연락 상태 전환(클릭 토글) — 쿠폰과 독립 ---- */
   function toggleContact(id) {
     var list = Store.getReservations();
     var r = null;
@@ -154,30 +154,35 @@
     if (!r) return;
     var done = r.contactStatus === "통화완료";
     if (!done) {
-      // 미연락 → 통화완료: 쿠폰이 있고 사용 취소되지 않았으면 사용 확정
-      // (수동으로 '사용 안함' 처리한 건은 통화완료 후에도 그대로 유지)
-      var patch = { contactStatus: "통화완료", contactedAt: new Date().toISOString() };
-      if (r.couponCode && !r.couponConfirmed && !r.couponVoided) {
-        Store.confirmCoupon(r.couponCode, { hospital: r.hospital, name: r.name });
-        patch.couponConfirmed = true;
-      }
-      Store.updateReservation(id, patch);
-      // ★ 실제로 사용 확정된 경우에만 같은 쿠폰을 쓴 다른 "사용 예정" 예약을 자동 "사용 안함" 처리(쿠폰은 1인 1회·1院)
-      if (r.couponCode && patch.couponConfirmed) voidOtherPending(r.couponCode, id);
+      Store.updateReservation(id, { contactStatus: "통화완료", contactedAt: new Date().toISOString() });
     } else {
-      // 통화완료 → 미연락: 쿠폰을 사용 전으로 되돌림
-      if (r.couponCode && r.couponConfirmed &&
-          !confirm(tr("통화완료를 취소하면 이 예약의 쿠폰 사용도 취소되어 다시 사용 가능 상태로 돌아갑니다. 계속하시겠습니까?"))) {
+      Store.updateReservation(id, { contactStatus: "미연락", contactedAt: "" });
+    }
+    render();
+  }
+
+  /* ---- 쿠폰 사용 토글(클릭 토글) — 연락 상태와 독립 ---- */
+  function toggleCoupon(id) {
+    var list = Store.getReservations();
+    var r = null;
+    for (var i = 0; i < list.length; i++) { if (list[i].id === id) { r = list[i]; break; } }
+    if (!r || !r.couponCode) return;
+    if (r.couponVoided === "auto") return;   // 타 병원 자동 처리건은 변경 불가
+
+    if (!r.couponConfirmed || r.couponVoided === "manual") {
+      // 사용 안함 → 쿠폰 사용 확정
+      if (couponConfirmedElsewhere(r.couponCode, id)) {
+        alert(tr("이 쿠폰은 이미 다른 병원에서 사용되었습니다."));
         return;
       }
-      var patch2 = { contactStatus: "미연락", contactedAt: "" };
-      if (r.couponCode && r.couponConfirmed) {
-        Store.releaseCoupon(r.couponCode);
-        patch2.couponConfirmed = false;
-      }
-      Store.updateReservation(id, patch2);
-      // ★ 자동으로 "사용 안함" 처리됐던 다른 예약을 "사용 예정"으로 복원
-      if (r.couponCode) restoreAutoVoided(r.couponCode, id);
+      Store.confirmCoupon(r.couponCode, { hospital: r.hospital, name: r.name });
+      Store.updateReservation(id, { couponConfirmed: true, couponVoided: false });
+      voidOtherPending(r.couponCode, id);
+    } else {
+      // 쿠폰 사용 확정 → 사용 안함(취소)
+      Store.releaseCoupon(r.couponCode);
+      Store.updateReservation(id, { couponConfirmed: false });
+      restoreAutoVoided(r.couponCode, id);
     }
     render();
   }
@@ -210,38 +215,6 @@
     return false;
   }
 
-  /* ---- 쿠폰 사용 취소 / 되돌리기 (사용 예정·사용 확정 ⇄ 사용 안함, 수동) ---- */
-  function toggleCouponVoid(id) {
-    var list = Store.getReservations();
-    var r = null;
-    for (var i = 0; i < list.length; i++) { if (list[i].id === id) { r = list[i]; break; } }
-    if (!r || !r.couponCode) return;
-    if (r.couponVoided === "auto") return; // 타 병원 사용으로 자동 처리된 건 수동 변경 불가
-
-    if (!r.couponVoided) {
-      // 사용 중(사용 예정 또는 통화완료·사용 확정) → 사용 안함(수동 취소)
-      if (!confirm(tr("이 예약의 쿠폰 사용을 취소하고 '사용 안함'으로 변경하시겠습니까?"))) return;
-      Store.updateReservation(id, { couponVoided: "manual" });
-      if (r.couponConfirmed) {
-        // 확정 상태였으면 쿠폰을 사용 해제 + 같은 코드의 자동 취소건을 사용 예정으로 복원
-        Store.releaseCoupon(r.couponCode);
-        restoreAutoVoided(r.couponCode, id);
-      }
-    } else {
-      // 사용 안함(수동) → 되돌리기. 단, 같은 코드가 이미 타 병원에서 사용 중이면 불가
-      if (couponConfirmedElsewhere(r.couponCode, id)) {
-        alert(tr("이 쿠폰은 이미 다른 병원에서 사용되어 되돌릴 수 없습니다."));
-        return;
-      }
-      Store.updateReservation(id, { couponVoided: false });
-      if (r.couponConfirmed) {
-        // 확정 상태로 되돌리는 경우: 쿠폰을 다시 사용 확정 + 같은 코드의 다른 예정건 자동 취소
-        Store.confirmCoupon(r.couponCode, { hospital: r.hospital, name: r.name });
-        voidOtherPending(r.couponCode, id);
-      }
-    }
-    render();
-  }
 
   /* ---- 예약 삭제 ---- */
   function deleteReservation(id) {
@@ -382,27 +355,17 @@
            "</span>";
   }
 
-  /* 쿠폰 셀(사용 안함 / 사용 예정 / 사용 확정 / 취소) */
+  /* 쿠폰 셀 — 토글 버튼(사용 안함 ⇄ ✓ 쿠폰 사용) */
   function couponCell(r) {
-    if (!r.couponCode) return "<span class='pill no'>" + tr("사용 안함") + "</span>";
+    if (!r.couponCode) return "—";
     if (r.couponVoided === "auto") {
-      // 타 병원에서 사용되어 자동으로 사용 안함(수동 변경 불가)
-      return "<span class='cstat-wrap'><span class='pill no'>" + tr("사용 안함") + "</span>" +
+      return "<span class='cstat-wrap'>" +
+             "<button class='cpstat' disabled>" + tr("사용 안함") + "</button>" +
              "<span class='cstat-at'>" + tr("타 병원 사용") + "</span></span>";
     }
-    if (r.couponVoided === "manual") {
-      // 관리자가 취소함 → 되돌리기 버튼 제공
-      return "<span class='cstat-wrap'><span class='pill no'>" + tr("사용 안함") + "</span>" +
-             "<button class='cvoid' data-id='" + esc(r.id) + "'>" + tr("되돌리기") + "</button></span>";
-    }
-    if (r.couponConfirmed) {
-      // 사용 확정 → 통화완료 후에도 사용 취소 버튼 제공
-      return "<span class='cstat-wrap'><span class='pill use'>" + tr("쿠폰 사용") + "</span>" +
-             "<button class='cvoid' data-id='" + esc(r.id) + "'>" + tr("사용 취소") + "</button></span>";
-    }
-    // 사용 예정 → 사용 취소 버튼 제공
-    return "<span class='cstat-wrap'><span class='pill pending'>" + tr("사용 예정") + "</span>" +
-           "<button class='cvoid' data-id='" + esc(r.id) + "'>" + tr("사용 취소") + "</button></span>";
+    var confirmed = r.couponConfirmed && !r.couponVoided;
+    return "<button class='cpstat" + (confirmed ? " done" : "") + "' data-id='" + esc(r.id) + "'>" +
+             (confirmed ? tr("✓ 쿠폰 사용") : tr("사용 안함")) + "</button>";
   }
 
   function renderCoupons() {
