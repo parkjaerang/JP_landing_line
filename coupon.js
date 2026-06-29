@@ -245,6 +245,13 @@
       return true;
     },
 
+    /* 코드로 쿠폰 단건 조회 */
+    getCouponByCode: function (rawCode) {
+      var code = String(rawCode || "").trim().toUpperCase();
+      var coupons = jget(K_COUPONS, {});
+      return coupons[code] || null;
+    },
+
     getReservations: function () { return jget(K_RESV, []); },
     getCoupons: function () {
       var obj = jget(K_COUPONS, {});
@@ -487,6 +494,12 @@
             v.reason === "used"    ? "このクーポンは既に使用済みです。" :
             v.reason === "notfound"? "クーポンコードが見つかりません。" :
                                      "クーポンコードを入力してください。";
+          return;
+        }
+        // 입력한 전화번호와 쿠폰 발급 전화번호 일치 확인
+        var couponData = Store.getCouponByCode(code);
+        if (couponData && normPhone(couponData.phone) !== phone) {
+          err.textContent = "入力された電話番号とクーポンに登録された電話番号が一致しません。ご確認ください。";
           return;
         }
         // ★ 여기서는 사용 확정하지 않는다. LINE 연락 완료까지 "보류"로 둔다
