@@ -18,7 +18,7 @@
      - lineUrl  : LINE 친구추가 URL   예) https://line.me/R/ti/p/@xxxx
      - oaId     : LINE 공식계정 ID    예) @xxxx
                   (oaId 가 있으면 쿠폰코드가 자동 입력된 메시지를 보낼 수 있음)
-     lineUrl / oaId 가 비어 있으면 placeholder QR 이 표시됩니다.
+     lineUrl / oaId 가 비어 있으면 DEFAULT_LINE_URL 로 LINE 을 엽니다.
      ===================================================================== */
   /* ★ 백엔드 전환 권장 (병원 설정) / ★ 建议改造为后端（医院配置）
      [KO] 병원별 LINE 정보가 코드에 하드코딩되어 있습니다. 관리자가 화면에서
@@ -33,6 +33,7 @@
     ceramique_LP: { name: "Ceramique",       lineUrl: "", oaId: "" },
     lovae_LP:     { name: "Lovae",           lineUrl: "", oaId: "" }
   };
+  var DEFAULT_LINE_URL = "https://line.me/ti/p/B9VXEcUEXA";
   /* ▲▲▲ 설정 끝 ▲▲▲ */
 
   /* =============================================================
@@ -259,11 +260,16 @@
     }
   };
 
-  /* ---- QR 이미지 URL(qrserver API로 텍스트/URL을 QR로 변환) ---- */
-  function qrImageUrl(data, size) {
-    var s = size || 220;
-    return "https://api.qrserver.com/v1/create-qr-code/?size=" + s + "x" + s +
-           "&margin=8&data=" + encodeURIComponent(data || "LINE設定待ち");
+  /* ---- LINE QR 이미지 경로(coupon.js와 같은 디렉터리의 lineQR.png) ---- */
+  function lineQrImageSrc() {
+    var scripts = document.getElementsByTagName("script");
+    for (var i = scripts.length - 1; i >= 0; i--) {
+      var src = scripts[i].getAttribute("src") || "";
+      if (src.indexOf("coupon.js") !== -1) {
+        return src.replace(/coupon\.js(\?.*)?$/, "lineQR.png");
+      }
+    }
+    return "lineQR.png";
   }
 
   /* ---- LINE 메시지 전송 URL(oaId가 있으면 코드를 자동 입력) ---- */
@@ -312,7 +318,8 @@
       ".cp-code{font-size:30px;font-weight:800;letter-spacing:4px;color:#1a1c1f;background:#f1f5f2;" +
       "border:2px dashed #06c755;border-radius:12px;padding:16px;margin:6px 0 4px}" +
       ".cp-note{font-size:9px;color:#9aa0a6;margin-top:14px;line-height:1.6}" +
-      ".cp-qr{width:200px;height:200px;margin:8px auto 4px;display:block;border-radius:10px}" +
+      ".cp-qr-link{display:inline-block;margin:8px auto 4px;cursor:pointer;line-height:0;border-radius:10px}" +
+      ".cp-qr{width:200px;height:200px;display:block;border-radius:10px}" +
       ".cp-tag{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:10px}" +
       ".cp-tag.use{background:#e6f7ee;color:#06a047}" +
       ".cp-tag.no{background:#eef0f3;color:#6b7077}" +
@@ -527,8 +534,7 @@
   function reservationDoneView(content, close, cfg, info) {
     var prefill = "【LINE予約】\n病院: " + cfg.name + "\nお名前: " + info.name +
       (info.useCoupon ? "\nクーポン: " + info.code + "(初回5%OFF適用)" : "\nクーポン: 利用なし");
-    var lineUrl = buildLineUrl(cfg, prefill);
-    var qrData = lineUrl || ("LINE設定待ち / " + cfg.name);
+    var lineUrl = buildLineUrl(cfg, prefill) || DEFAULT_LINE_URL;
 
     content.innerHTML =
       "<span class='cp-badge'>予約受付</span>" +
@@ -537,13 +543,10 @@
       "<h3>LINE で予約を完了してください</h3>" +
       "<p class='cp-sub'>下記の QR コードを読み取るか、ボタンから LINE を開いてください。<br>" +
       "メッセージにお名前" + (info.useCoupon ? "・クーポンコード" : "") + "が入力されます。</p>" +
-      "<img class='cp-qr' src='" + qrImageUrl(qrData, 220) + "' alt='LINE QR'>" +
-      (lineUrl
-        ? "<a class='cp-btn' href='" + lineUrl + "' target='_blank' rel='noopener' style='display:block;text-decoration:none;box-sizing:border-box'>LINE を開く</a>"
-        : "<button class='cp-btn' disabled>LINE 未設定(管理者へ連絡)</button>") +
-      "<p class='cp-note'>" +
-        (lineUrl ? "" : "※この病院の LINE 設定がまだのため QR はプレースホルダです。<br>") +
-        "ご予約ありがとうございます。担当者がご対応いたします。</p>";
+      "<a class='cp-qr-link' href='" + DEFAULT_LINE_URL + "' target='_blank' rel='noopener'>" +
+      "<img class='cp-qr' src='" + lineQrImageSrc() + "' alt='LINE QR'></a>" +
+      "<a class='cp-btn' href='" + lineUrl + "' target='_blank' rel='noopener' style='display:block;text-decoration:none;box-sizing:border-box'>LINE を開く</a>" +
+      "<p class='cp-note'>ご予約ありがとうございます。担当者がご対応いたします。</p>";
   }
 
   function initLPButtons() {
